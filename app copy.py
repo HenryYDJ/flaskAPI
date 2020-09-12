@@ -16,44 +16,6 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 jwt = JWTManager(app)
 
-class User(Base):
-...     __tablename__ = 'users'
-...
-...     id = Column(Integer, primary_key=True)
-...     name = Column(String)
-...     fullname = Column(String)
-...     nickname = Column(String)
-...
-...     def __repr__(self):
-...        return "<User(name='%s', fullname='%s', nickname='%s')>" % (
-...                             self.name, self.fullname, self.nickname)
-
-class Students(db.Model):
-    __tablename__ = 'students'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-
-    def __repr__(self):
-        return "<Student(name='%s')>" % (self.name)
-
-
-class Courses(db.Model):
-    __tablename__ = "courses"
-
-    id = Column(Integer, primary_key=True)
-    course_name = Column(String)
-
-    def __repr__(self):
-            return "<Course(course name='%s')>" % (self.course_name)
-
-
-class CourseCredits(db.Model):
-    __tablename__ = "courseCredits"
-
-    id = Column(Integer, primary_key=True)
-    
-
 
 @app.cli.command('db_create')
 def db_create():
