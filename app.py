@@ -29,6 +29,20 @@ class Student(db.Model):
         return "<Student(name='%s')>" % (self.name)
 
 
+class Teacher(db.Model):
+    __tablename__ = "teachers"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+
+class User(db.Model):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+
 class Course(db.Model):
     __tablename__ = "courses"
 
@@ -36,6 +50,7 @@ class Course(db.Model):
     course_name = Column(String)
 
     course_credits = db.relationship("CourseCredit", back_populates="course")
+    class_sessions = db.relationship("ClassSession", back_populates="course")
 
     def __repr__(self):
             return "<Course(course name='%s')>" % (self.course_name)
@@ -50,6 +65,27 @@ class CourseCredit(db.Model):
 
     student = db.relationship("Student", back_populates="student_credits")
     course = db.relationship("Course", back_populates="course_credits")
+
+
+class ClassSession(db.Model):
+    __tablename__ = "classSessions"
+
+    id = Column(Integer, primary_key=True)
+    course_id = Column(Integer, ForeignKey("courses.id"))
+    info = Column(String)
+
+    course = db.relationship("Course", back_populates="class_sessions")
+
+# Need to add relationships to the following classes --------------------------------------------------------------
+class ParentHood(db.Model):
+    __tablename__ = "parenthoods"
+
+    student_id = Column(Integer, ForeignKey("students.id"), primary_key=True)
+    parent_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+
+
+class Teachings(db.Model):
+    __tablename__ = "teachings"
 
 
 @app.cli.command('db_create')
@@ -67,11 +103,15 @@ def db_drop():
 @app.cli.command('db_seed')
 def db_seed():
 
-    student = Student(name="岳鼎钧")
+    student = Student(name="abc")
     english = Course(course_name='English')
     courseNo = CourseCredit(number_of_classes=100)
-    courseNo.student = student
+    # courseNo.student = student
     english.course_credits.append(courseNo)
+    student.student_credits.append(courseNo)
+
+    session1 = ClassSession(info="what's up")
+    english.class_sessions.append(session1)
 
 
 
@@ -89,11 +129,11 @@ def db_seed():
     #                 radius=3959,
     #                 distance=92.96e6)
     
-    # db.session.add(english)
+    db.session.add(english)
 
     # SQLAlchemy has cascading property, so I just need to add one of the objects to the session.
     # https://docs.sqlalchemy.org/en/13/orm/cascades.html#unitofwork-cascades
-    db.session.add(student)
+    # db.session.add(student)
     # db.session.add(courseNo)
 
     db.session.commit()
