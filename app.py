@@ -24,6 +24,7 @@ class Student(db.Model):
     name = Column(String)
 
     student_credits = db.relationship("CourseCredit", back_populates="student")
+    # partents = db.relationship("ParentHood", back_populates="students")
 
     def __repr__(self):
         return "<Student(name='%s')>" % (self.name)
@@ -84,8 +85,20 @@ class ParentHood(db.Model):
     parent_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
 
 
-class Teachings(db.Model):
+class Teaching(db.Model):
     __tablename__ = "teachings"
+
+    session_id = Column(Integer, ForeignKey("classSessions.id"), primary_key=True)
+    teacher_id = Column(Integer, ForeignKey("teachers.id"), primary_key=True)
+
+
+class TakingClass(db.Model):
+    __tablename__ = "takingClasses"
+
+    session_id = Column(Integer, ForeignKey("classSessions.id"), primary_key=True)
+    teacher_id = Column(Integer, ForeignKey("teachers.id"), primary_key=True)
+    comments = Column(String)
+
 
 
 @app.cli.command('db_create')
