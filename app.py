@@ -2,8 +2,8 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
 from flask_marshmallow import Marshmallow
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token
-from flask_mail import Mail, Message
+# from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+# from flask_mail import Mail, Message
 import os
 
 app = Flask(__name__)
@@ -14,14 +14,14 @@ app.config
 
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-jwt = JWTManager(app)
+# jwt = JWTManager(app)
 
 # All relationships are configured on the "many" side of a one-to-many relationship.
 class Student(db.Model):
     __tablename__ = 'students'
 
     id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
     name = Column(String)
 
     def __repr__(self):
@@ -32,7 +32,7 @@ class Teacher(db.Model):
     __tablename__ = "teachers"
 
     id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
     name = Column(String)
 
 
@@ -40,7 +40,7 @@ class User(db.Model):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
     name = Column(String)
 
 
@@ -48,7 +48,7 @@ class Course(db.Model):
     __tablename__ = "courses"
 
     id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
     course_name = Column(String)
 
     def __repr__(self):
@@ -60,7 +60,7 @@ class CourseCredit(db.Model):
 
     student_id = Column(Integer, ForeignKey('students.id'), primary_key=True)
     course_id = Column(Integer, ForeignKey('courses.id'), primary_key=True)
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
     credit = Column(Integer)
 
     # Relationships
@@ -73,7 +73,7 @@ class ClassSession(db.Model):
 
     id = Column(Integer, primary_key=True)
     course_id = Column(Integer, ForeignKey("courses.id"))
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
     info = Column(String)
 
     # Relationships
@@ -85,7 +85,7 @@ class ParentHood(db.Model):
 
     student_id = Column(Integer, ForeignKey("students.id"), primary_key=True)
     parent_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
 
     # Relationships
     student = db.relationship("Student", backref="parents")
@@ -97,7 +97,7 @@ class Teaching(db.Model):
 
     session_id = Column(Integer, ForeignKey("classSessions.id"), primary_key=True)
     teacher_id = Column(Integer, ForeignKey("teachers.id"), primary_key=True)
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
 
     # Relationships
     class_session = db.relationship("ClassSession", backref="session_teachings")
@@ -109,7 +109,7 @@ class TakingClass(db.Model):
 
     session_id = Column(Integer, ForeignKey("classSessions.id"), primary_key=True)
     student_id = Column(Integer, ForeignKey("students.id"), primary_key=True)
-    deleted = Column(Boolean)
+    deleted = Column(Boolean, default=False)
     comments = Column(String)
 
     # Relationships
@@ -134,9 +134,9 @@ def db_drop():
 @app.cli.command('db_seed')
 def db_seed():
 
-    student = Student(name="abc", deleted=False)
+    student = Student(name="abc")
     english = Course(course_name='English')
-    courseNo = CourseCredit(number_of_classes=100)
+    courseNo = CourseCredit(credit=100)
     # courseNo.student = student
     english.course_credits.append(courseNo)
     student.student_credits.append(courseNo)
@@ -170,10 +170,14 @@ def db_seed():
 
 #---------------API Section--------------------------------------------------------------------------
 
-# All APIs communicate using JSON
+# All APIs communicate using JSON format
+# API routes are /api/v1.0/name_of_api/optional_parameters
 
-@app.route('/addStudent', methods=['POST'])
-def addStudent():
+@app.route('/api/v1.0/students', methods=['POST'])
+def add_student():
+    """
+    This api adds one student to the DB.
+    """
     name = request.json['name']
     deleted = request.json['deleted']
 
@@ -186,6 +190,31 @@ def addStudent():
         db.session.commit()
         return jsonify(message="Student created successfully"), 201
 
+
+@app.route('/api/v1.0/students/<int:student_id>', methods=['GET'])
+def get_student(student_id):
+    """
+    This api get one student from the DB by the student's id.
+    """
+    id = student_id
+
+    student = Student.query.filter_by(id=id, deleted=False).first()
+    if student:
+        print(student)
+        return jsonify(message="Stu")
+        # return jsonify(message='The student already exists'), 409
+    else:
+        return jsonify(message="Student not found"), 404
+
+
+"""
+Todos:
+    1. jsonify returned objects from the DB
+    2. Add pagination support to returned lists
+    3. Add CRUDs to all classes
+    4. Add security to all APIs
+    5. Add login page
+"""
 
 
 
