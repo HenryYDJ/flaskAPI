@@ -49,7 +49,7 @@ class Course(db.Model):
 
     id = Column(Integer, primary_key=True)
     deleted = Column(Boolean, default=False)
-    course_name = Column(String)
+    name = Column(String)
 
     def __repr__(self):
         return "<Course(course name='%s')>" % (self.course_name)
@@ -86,6 +86,7 @@ class ParentHood(db.Model):
     student_id = Column(Integer, ForeignKey("students.id"), primary_key=True)
     parent_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     deleted = Column(Boolean, default=False)
+    comments = Column(String)
 
     # Relationships
     student = db.relationship("Student", backref="parents")
@@ -98,6 +99,7 @@ class Teaching(db.Model):
     session_id = Column(Integer, ForeignKey("classSessions.id"), primary_key=True)
     teacher_id = Column(Integer, ForeignKey("teachers.id"), primary_key=True)
     deleted = Column(Boolean, default=False)
+    comments = Column(String)
 
     # Relationships
     class_session = db.relationship("ClassSession", backref="session_teachings")
@@ -117,8 +119,62 @@ class TakingClass(db.Model):
     student = db.relationship("Student", backref="student_takings")
 
 
+#--------------------------Marshmallow Schema----------------------------------------
+class StudentSchema(ma.Schema):
+    class Meta:
+        fields = ["name"]
 
 
+class TeacherSchema(ma.Schema):
+    class Meta:
+        fields = ["name"]
+
+
+class UserSchema(ma.Schema):
+    class Meta:
+        fields = ["name"]
+
+
+class CourseSchema(ma.Schema):
+    class Meta:
+        fields = ["name"]
+
+
+class CourseCreditSchema(ma.Schema):
+    class Meta:
+        fields = ["credit"]
+
+
+class TeachingSchema(ma.Schema):
+    class Meta:
+        fields = ["comments"]
+
+
+class TakingClassSchema(ma.Schema):
+    class Meta:
+        fields = ["comments"]
+
+
+class ClassSessionSchema(ma.Schema):
+    class Meta:
+        fields = ["info"]
+
+
+class ParentHoodSchema(ma.Schema):
+    class Meta:
+        fields = ["comments"]
+
+student_schema = StudentSchema()
+students_schema = StudentSchema(many=True)
+
+teacher_schema = TeacherSchema()
+teachers_schema = TeacherSchema(many=True)
+
+course_schema = CourseSchema()
+courses_schema = CourseSchema(many=True)
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
 @app.cli.command('db_create')
 def db_create():
     db.create_all()
@@ -135,7 +191,7 @@ def db_drop():
 def db_seed():
 
     student = Student(name="abc")
-    english = Course(course_name='English')
+    english = Course(name='English')
     courseNo = CourseCredit(credit=100)
     # courseNo.student = student
     english.course_credits.append(courseNo)
@@ -172,7 +228,7 @@ def db_seed():
 
 # All APIs communicate using JSON format
 # API routes are /api/v1.0/name_of_api/optional_parameters
-
+#---------------------------Student Section----------------------------------------------------------
 @app.route('/api/v1.0/students', methods=['POST'])
 def add_student():
     """
@@ -194,26 +250,304 @@ def add_student():
 @app.route('/api/v1.0/students/<int:student_id>', methods=['GET'])
 def get_student(student_id):
     """
-    This api get one student from the DB by the student's id.
+    This api gets one student from the DB by the student's id.
     """
     id = student_id
 
     student = Student.query.filter_by(id=id, deleted=False).first()
     if student:
-        print(student)
-        return jsonify(message="Stu")
-        # return jsonify(message='The student already exists'), 409
+        return jsonify(student_schema.dump(student))
     else:
         return jsonify(message="Student not found"), 404
 
 
+@app.route('/api/v1.0/students', methods=['GET'])
+def get_students():
+    """
+    This api gets all students from the DB.
+    """
+
+    students = Student.query.filter_by(deleted=False).all()
+    if students:
+        return jsonify(students_schema.dump(students))
+    else:
+        return jsonify(message="No students found"), 404
+
+
+@app.route('/api/v1.0/students/<int:student_id>', methods=['PUT'])
+def update_student(student_id):
+    """
+    This api updates a student's information based on the student's id.
+    """
+    id = student_id
+
+    student = Student.query.filter_by(id=id, deleted=False).first()
+    if student:
+        student.name = request.json["name"]
+        db.session.add(student)
+        db.session.commit()
+        return jsonify(student_schema.dump(student))
+    else:
+        return jsonify(message="Student not found"), 404
+
+
+@app.route('/api/v1.0/students/<int:student_id>', methods=['DELETE'])
+def delete_student(student_id):
+    """
+    This api deletes a student by student's id from the DB.
+    """
+    id = student_id
+
+    student = Student.query.filter_by(id=id, deleted=False).first()
+    if student:
+        student.deleted = True
+        db.session.add(student)
+        db.session.commit()
+        return jsonify(student_schema.dump(student))
+    else:
+        return jsonify(message="Student not found"), 404
+
+
+#-------------------Teachers Section--------------------------------------------------------
+@app.route('/api/v1.0/teachers', methods=['POST'])
+def add_teacher():
+    """
+    This api adds one teacher to the DB.
+    """
+    name = request.json['name']
+
+    already_existed = Teacher.query.filter_by(name=name, deleted=False).first()
+    if already_existed:
+        return jsonify(message='The teacher already exists'), 409
+    else:
+        teacher = Teacher(name=name)
+        db.session.add(teacher)
+        db.session.commit()
+        return jsonify(message="Teacher created successfully"), 201
+
+
+@app.route('/api/v1.0/teachers/<int:teacher_id>', methods=['GET'])
+def get_teacher(teacher_id):
+    """
+    This api gets one teacher from the DB by the teacher's id.
+    """
+    id = teacher_id
+
+    teacher = Teacher.query.filter_by(id=id, deleted=False).first()
+    if teacher:
+        return jsonify(teacher_schema.dump(teacher))
+    else:
+        return jsonify(message="Teacher not found"), 404
+
+
+@app.route('/api/v1.0/teachers', methods=['GET'])
+def get_teachers():
+    """
+    This api gets all teachers from the DB.
+    """
+    teachers = Teacher.query.filter_by(deleted=False).all()
+    if teachers:
+        return jsonify(teachers_schema.dump(teachers))
+    else:
+        return jsonify(message="No teachers found"), 404
+
+
+@app.route('/api/v1.0/teachers/<int:teacher_id>', methods=['PUT'])
+def update_teacher(teacher_id):
+    """
+    This api updates a teacher's information based on the teacher's id
+    """
+    id = teacher_id
+
+    teacher = Teacher.query.filter_by(id=id, deleted=False).first()
+    if teacher:
+        teacher.name = request.json["name"]
+        db.session.add(teacher)
+        db.session.commit()
+        return jsonify(teacher_schema.dump(teacher))
+    else:
+        return jsonify(message="Teacher not found"), 404
+
+
+@app.route('/api/v1.0/teachers/<int:teacher_id>', methods=['DELETE'])
+def delete_teacher(teacher_id):
+    """
+    This api deletes a teacher by teacher's id from the DB.
+    """
+    id = teacher_id
+
+    teacher = Teacher.query.filter_by(id=id, deleted=False).first()
+    if teacher:
+        teacher.deleted = True
+        db.session.add(teacher)
+        db.session.commit()
+        return jsonify(teacher_schema.dump(teacher))
+    else:
+        return jsonify(message="Teacher not found"), 404
+
+
+#-------------------Courses Section--------------------------------------------------------
+@app.route('/api/v1.0/courses', methods=['POST'])
+def add_course():
+    """
+    This api adds one course to the DB.
+    """
+    name = request.json['name']
+
+    already_existed = Course.query.filter_by(name=name, deleted=False).first()
+    if already_existed:
+        return jsonify(message='The course already exists'), 409
+    else:
+        course = Course(name=name)
+        db.session.add(course)
+        db.session.commit()
+        return jsonify(message="Course created successfully"), 201
+
+
+@app.route('/api/v1.0/courses/<int:course_id>', methods=['GET'])
+def get_course(course_id):
+    """
+    This api gets one course from the DB by the course's id.
+    """
+    id = course_id
+
+    course = Course.query.filter_by(id=id, deleted=False).first()
+    if course:
+        return jsonify(course_schema.dump(course))
+    else:
+        return jsonify(message="Course not found"), 404
+
+
+@app.route('/api/v1.0/courses', methods=['GET'])
+def get_courses():
+    """
+    This api gets all courses from the DB.
+    """
+    courses = Course.query.filter_by(deleted=False).all()
+    if courses:
+        return jsonify(courses_schema.dump(courses))
+    else:
+        return jsonify(message="No courses found"), 404
+
+
+@app.route('/api/v1.0/courses/<int:course_id>', methods=['PUT'])
+def update_course(course_id):
+    """
+    This api updates a course's information based on the course's id
+    """
+    id = course_id
+
+    course = Course.query.filter_by(id=id, deleted=False).first()
+    if course:
+        course.name = request.json["name"]
+        db.session.add(course)
+        db.session.commit()
+        return jsonify(course_schema.dump(course))
+    else:
+        return jsonify(message="Course not found"), 404
+
+
+@app.route('/api/v1.0/courses/<int:course_id>', methods=['DELETE'])
+def delete_course(course_id):
+    """
+    This api deletes a course by course's id from the DB.
+    """
+    id = course_id
+
+    course = Course.query.filter_by(id=id, deleted=False).first()
+    if course:
+        course.deleted = True
+        db.session.add(course)
+        db.session.commit()
+        return jsonify(course_schema.dump(course))
+    else:
+        return jsonify(message="Course not found"), 404
+
+
+#-----------------------Users Section-----------------------------------------
+@app.route('/api/v1.0/users', methods=['POST'])
+def add_user():
+    """
+    This api adds one user to the DB.
+    """
+    name = request.json['name']
+
+    already_existed = User.query.filter_by(name=name, deleted=False).first()
+    if already_existed:
+        return jsonify(message='The user already exists'), 409
+    else:
+        user = User(name=name)
+        db.session.add(user)
+        db.session.commit()
+        return jsonify(message="User created successfully"), 201
+
+
+@app.route('/api/v1.0/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    """
+    This api gets one user from the DB by the user's id.
+    """
+    id = user_id
+
+    user = User.query.filter_by(id=id, deleted=False).first()
+    if user:
+        return jsonify(user_schema.dump(user))
+    else:
+        return jsonify(message="User not found"), 404
+
+
+@app.route('/api/v1.0/users', methods=['GET'])
+def get_users():
+    """
+    This api gets all users from the DB.
+    """
+    users = User.query.filter_by(deleted=False).all()
+    if users:
+        return jsonify(users_schema.dump(users))
+    else:
+        return jsonify(message="No users found"), 404
+
+
+@app.route('/api/v1.0/users/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    """
+    This api updates a user's information based on the user's id
+    """
+    id = user_id
+
+    user = User.query.filter_by(id=id, deleted=False).first()
+    if user:
+        user.name = request.json["name"]
+        db.session.add(user)
+        db.session.commit()
+        return jsonify(user_schema.dump(user))
+    else:
+        return jsonify(message="User not found"), 404
+
+
+@app.route('/api/v1.0/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    """
+    This api deletes a user by user's id from the DB.
+    """
+    id = user_id
+
+    user = User.query.filter_by(id=id, deleted=False).first()
+    if user:
+        user.deleted = True
+        db.session.add(user)
+        db.session.commit()
+        return jsonify(user_schema.dump(user))
+    else:
+        return jsonify(message="User not found"), 404
+
 """
 Todos:
-    1. jsonify returned objects from the DB
+    M 1. jsonify returned objects from the DB
     2. Add pagination support to returned lists
-    3. Add CRUDs to all classes
+    M 3. Add CRUDs to all classes
     4. Add security to all APIs
-    5. Add login page
+    5. Add login function
 """
 
 
