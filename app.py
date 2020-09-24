@@ -307,7 +307,6 @@ def delete_student(student_id):
     else:
         return jsonify(message="Student not found"), 404
 
-
 #-------------------Teachers Section--------------------------------------------------------
 @app.route('/api/v1.0/teachers', methods=['POST'])
 def add_teacher():
@@ -384,7 +383,6 @@ def delete_teacher(teacher_id):
         return jsonify(teacher_schema.dump(teacher))
     else:
         return jsonify(message="Teacher not found"), 404
-
 
 #-------------------Courses Section--------------------------------------------------------
 @app.route('/api/v1.0/courses', methods=['POST'])
@@ -463,7 +461,6 @@ def delete_course(course_id):
     else:
         return jsonify(message="Course not found"), 404
 
-
 #-----------------------Users Section-----------------------------------------
 @app.route('/api/v1.0/users', methods=['POST'])
 def add_user():
@@ -541,6 +538,111 @@ def delete_user(user_id):
     else:
         return jsonify(message="User not found"), 404
 
+#---------------------CourseCredit Section---------------------------------
+@app.route('/api/v1.0/course_credit', methods=['POST'])
+def add_course_credit():
+    """
+    This api adds one course_credit record to the DB.
+    """
+    course_id = request.json['course_id']
+    student_id = request.json['student_id']
+
+    course = Course.query.filter_by(id=course_id, deleted=False).first()
+    student = Student.query.filter_by(id=student_id, deleted=False).first()
+
+    if course and student:
+        # Course and Student must both exist
+        already_existed = CourseCredit.query.filter_by(course_id=course_id, student_id=student_id, deleted=False).first()
+        if already_existed:
+            return jsonify(message="The course credit entry already exists"), 409
+        else:
+            course_credit = CourseCredit()
+            course_credit.student = student
+            course_credit.course = course
+            course_credit.credit = request.json['credit']
+            db.session.add(course_credit)
+            db.session.commit()
+            return jsonify(message="Course credit added successfully"), 201
+    else:
+        return jsonify(message="Student or Course do not exist."), 404
+
+
+@app.route('/api/v1.0/course_credit', methods=['PUT'])
+def update_course_credit():
+    """
+    This api updates one course_credit record in the DB.
+    """
+    course_id = request.json['course_id']
+    student_id = request.json['student_id']
+
+    course_credit = CourseCredit.query.filter_by(course_id=course_id, student_id=student_id, deleted=False).first()
+    if course_credit:
+        course_credit.credit = request.json['credit']
+        db.session.add(course_credit)
+        db.session.commit()
+        return jsonify(message="Course credit updated successfully."), 201
+    else:
+        return jsonify(message="Course credit do not exist."), 404
+
+# @app.route('/api/v1.0/users/<int:user_id>', methods=['GET'])
+# def get_user(user_id):
+#     """
+#     This api gets one user from the DB by the user's id.
+#     """
+#     id = user_id
+
+#     user = User.query.filter_by(id=id, deleted=False).first()
+#     if user:
+#         return jsonify(user_schema.dump(user))
+#     else:
+#         return jsonify(message="User not found"), 404
+
+
+# @app.route('/api/v1.0/users', methods=['GET'])
+# def get_users():
+#     """
+#     This api gets all users from the DB.
+#     """
+#     users = User.query.filter_by(deleted=False).all()
+#     if users:
+#         return jsonify(users_schema.dump(users))
+#     else:
+#         return jsonify(message="No users found"), 404
+
+
+# @app.route('/api/v1.0/users/<int:user_id>', methods=['PUT'])
+# def update_user(user_id):
+#     """
+#     This api updates a user's information based on the user's id
+#     """
+#     id = user_id
+
+#     user = User.query.filter_by(id=id, deleted=False).first()
+#     if user:
+#         user.name = request.json["name"]
+#         db.session.add(user)
+#         db.session.commit()
+#         return jsonify(user_schema.dump(user))
+#     else:
+#         return jsonify(message="User not found"), 404
+
+
+# @app.route('/api/v1.0/users/<int:user_id>', methods=['DELETE'])
+# def delete_user(user_id):
+#     """
+#     This api deletes a user by user's id from the DB.
+#     """
+#     id = user_id
+
+#     user = User.query.filter_by(id=id, deleted=False).first()
+#     if user:
+#         user.deleted = True
+#         db.session.add(user)
+#         db.session.commit()
+#         return jsonify(user_schema.dump(user))
+#     else:
+#         return jsonify(message="User not found"), 404
+
 """
 Todos:
     M 1. jsonify returned objects from the DB
@@ -549,7 +651,6 @@ Todos:
     4. Add security to all APIs
     5. Add login function
 """
-
 
 
 # @app.route('/login', methods=['POST'])
