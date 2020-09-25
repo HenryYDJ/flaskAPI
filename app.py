@@ -142,7 +142,7 @@ class CourseSchema(ma.Schema):
 
 class CourseCreditSchema(ma.Schema):
     class Meta:
-        fields = ["credit"]
+        fields = ["student_id", "course_id", "credit"]
 
 
 class TeachingSchema(ma.Schema):
@@ -175,6 +175,10 @@ courses_schema = CourseSchema(many=True)
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
+
+course_credit_schema = CourseCreditSchema()
+course_credits_schema = CourseCreditSchema(many=True)
+
 @app.cli.command('db_create')
 def db_create():
     db.create_all()
@@ -584,6 +588,41 @@ def update_course_credit():
     else:
         return jsonify(message="Course credit do not exist."), 404
 
+
+@app.route('/api/v1.0/course_credit', methods=['DELETE'])
+def delete_course_credit():
+    """
+    This api deletes a course_credit record by its course_id and student_id.
+    """
+    course_id = request.args.get('course_id', None)
+    student_id = request.args.get('student_id', None)
+
+    course_credit = CourseCredit.query.filter_by(course_id=course_id, student_id=student_id, deleted=False).first()
+    if course_credit:
+        course_credit.deleted = True
+        db.session.add(course_credit)
+        db.session.commit()
+        return jsonify(message="Course credit deleted successfully."), 201
+    else:
+        return jsonify(message="Course credit do not exist."), 404
+
+
+@app.route('/api/v1.0/course_credit', methods=['GET'])
+def get_student_course_credit():
+    """
+    This api gets a list of course_credit record by its student_id.
+    """
+    student_id = request.args.get('student_id', None)
+
+    course_credits = CourseCredit.query.filter_by(student_id=student_id, deleted=False).all()
+    if course_credits:
+        return jsonify(course_credits_schema.dump(course_credits)), 201
+    else:
+        return jsonify(message="Course credits do not exist."), 404
+# @app.route('/createcm')
+# def createcm():
+#    summary  = request.args.get('summary', None)
+#    change  = request.args.get('change', None)
 # @app.route('/api/v1.0/users/<int:user_id>', methods=['GET'])
 # def get_user(user_id):
 #     """
