@@ -607,7 +607,7 @@ def delete_course_credit():
         return jsonify(message="Course credit do not exist."), 404
 
 
-@app.route('/api/v1.0/course_credit', methods=['GET'])
+@app.route('/api/v1.0/student_course_credit', methods=['GET'])
 def get_student_course_credit():
     """
     This api gets a list of course_credit record by its student_id.
@@ -619,6 +619,23 @@ def get_student_course_credit():
         return jsonify(course_credits_schema.dump(course_credits)), 201
     else:
         return jsonify(message="Course credits do not exist."), 404
+
+
+@app.route('/api/v1.0/course_course_credit', methods=['GET'])
+def get_course_course_credit():
+    """
+    This api gets a list of course_credit record by its course_id.
+    """
+    course_id = request.args.get('course_id', None)
+
+    course_credits = CourseCredit.query.filter_by(course_id=course_id, deleted=False).all()
+    if course_credits:
+        return jsonify(course_credits_schema.dump(course_credits)), 201
+    else:
+        return jsonify(message="Course credits do not exist."), 404
+
+
+
 # @app.route('/createcm')
 # def createcm():
 #    summary  = request.args.get('summary', None)
