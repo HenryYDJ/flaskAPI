@@ -179,6 +179,18 @@ users_schema = UserSchema(many=True)
 course_credit_schema = CourseCreditSchema()
 course_credits_schema = CourseCreditSchema(many=True)
 
+parent_hood_schema = ParentHoodSchema()
+parent_hoods_schema = ParentHoodSchema(many=True)
+
+class_session_schema = ClassSessionSchema()
+class_sessions_schema = ClassSessionSchema(many=True)
+
+teaching_schema = TeachingSchema()
+teachings_schema = TeachingSchema(many=True)
+
+taking_class_schema = TakingClassSchema()
+taking_classes_schema = TakingClassSchema(many=True)
+
 @app.cli.command('db_create')
 def db_create():
     db.create_all()
@@ -635,53 +647,367 @@ def get_course_course_credit():
         return jsonify(message="Course credits do not exist."), 404
 
 
+#------------------------------Parent Hood Section-------------------------------------------------------------------------
+@app.route('/api/v1.0/parent_hood', methods=['POST'])
+def add_parent_hood():
+    """
+    This api adds one parent_hood record to the DB.
+    """
+    parent_id = request.json['parent_id']
+    student_id = request.json['student_id']
 
-# @app.route('/createcm')
-# def createcm():
-#    summary  = request.args.get('summary', None)
-#    change  = request.args.get('change', None)
-# @app.route('/api/v1.0/users/<int:user_id>', methods=['GET'])
-# def get_user(user_id):
-#     """
-#     This api gets one user from the DB by the user's id.
-#     """
-#     id = user_id
+    parent = User.query.filter_by(id=parent_id, deleted=False).first()
+    student = Student.query.filter_by(id=student_id, deleted=False).first()
 
-#     user = User.query.filter_by(id=id, deleted=False).first()
-#     if user:
-#         return jsonify(user_schema.dump(user))
-#     else:
-#         return jsonify(message="User not found"), 404
-
-
-# @app.route('/api/v1.0/users', methods=['GET'])
-# def get_users():
-#     """
-#     This api gets all users from the DB.
-#     """
-#     users = User.query.filter_by(deleted=False).all()
-#     if users:
-#         return jsonify(users_schema.dump(users))
-#     else:
-#         return jsonify(message="No users found"), 404
+    if parent and student:
+        # Parent and Student must both exist
+        already_existed = ParentHood.query.filter_by(parent_id=parent_id, student_id=student_id, deleted=False).first()
+        if already_existed:
+            return jsonify(message="The parent hood entry already exists"), 409
+        else:
+            parent_hood = ParentHood()
+            parent_hood.student = student
+            parent_hood.parent = parent
+            parent_hood.comments = request.json['comments']
+            db.session.add(parent_hood)
+            db.session.commit()
+            return jsonify(message="Parent hood added successfully"), 201
+    else:
+        return jsonify(message="Student or Parent do not exist."), 404
 
 
-# @app.route('/api/v1.0/users/<int:user_id>', methods=['PUT'])
-# def update_user(user_id):
-#     """
-#     This api updates a user's information based on the user's id
-#     """
-#     id = user_id
+@app.route('/api/v1.0/parent_hood', methods=['PUT'])
+def update_parent_hood():
+    """
+    This api updates one parent_hood record in the DB.
+    """
+    parent_id = request.json['parent_id']
+    student_id = request.json['student_id']
 
-#     user = User.query.filter_by(id=id, deleted=False).first()
-#     if user:
-#         user.name = request.json["name"]
-#         db.session.add(user)
-#         db.session.commit()
-#         return jsonify(user_schema.dump(user))
-#     else:
-#         return jsonify(message="User not found"), 404
+    parent_hood = ParentHood.query.filter_by(parent_id=parent_id, student_id=student_id, deleted=False).first()
+    if parent_hood:
+        parent_hood.comments = request.json['comments']
+        db.session.add(parent_hood)
+        db.session.commit()
+        return jsonify(message="Parent hood updated successfully."), 201
+    else:
+        return jsonify(message="Parent hood do not exist."), 404
 
+
+@app.route('/api/v1.0/parent_hood', methods=['DELETE'])
+def delete_parent_hood():
+    """
+    This api deletes a parent_hood record by its parent_id and student_id.
+    """
+    parent_id = request.args.get('parent_id', None)
+    student_id = request.args.get('student_id', None)
+
+    parent_hood = ParentHood.query.filter_by(parent_id=parent_id, student_id=student_id, deleted=False).first()
+    if parent_hood:
+        parent_hood.deleted = True
+        db.session.add(parent_hood)
+        db.session.commit()
+        return jsonify(message="Parent hood deleted successfully."), 201
+    else:
+        return jsonify(message="Parent hood do not exist."), 404
+
+
+@app.route('/api/v1.0/student_parent_hood', methods=['GET'])
+def get_student_parent_hood():
+    """
+    This api gets a list of parent_hood record by its student_id.
+    """
+    student_id = request.args.get('student_id', None)
+
+    parent_hoods = ParentHood.query.filter_by(student_id=student_id, deleted=False).all()
+    if parent_hoods:
+        return jsonify(parent_hoods_schema.dump(parent_hoods)), 201
+    else:
+        return jsonify(message="Parent hoods do not exist."), 404
+
+
+@app.route('/api/v1.0/parent_parent_hood', methods=['GET'])
+def get_parent_parent_hood():
+    """
+    This api gets a list of parent_hood record by its parent_id.
+    """
+    parent_id = request.args.get('parent_id', None)
+
+    parent_hoods = ParentHood.query.filter_by(parent_id=parent_id, deleted=False).all()
+    if parent_hoods:
+        return jsonify(parent_hoods_schema.dump(parent_hoods)), 201
+    else:
+        return jsonify(message="Parent hoods do not exist."), 404
+
+
+#------------------------------------Class Session Section---------------------------------------------------
+@app.route('/api/v1.0/class_session', methods=['POST'])
+def add_class_session():
+    """
+    This api adds one class_session record to the DB.
+    """
+    course_id = request.json['course_id']
+
+    course = Course.query.filter_by(id=course_id, deleted=False).first()
+
+    if course:
+        # Course must exist
+        class_session = ClassSession()
+        class_session.course = course
+        class_session.info = request.json['info']
+        db.session.add(class_session)
+        db.session.commit()
+        return jsonify(message="Class Session added successfully"), 201
+    else:
+        return jsonify(message="Course does not exist."), 404
+
+
+@app.route('/api/v1.0/class_session', methods=['PUT'])
+def update_class_session():
+    """
+    This api updates one class_session record in the DB.
+    """
+    id = request.json['id']
+
+    class_session = ClassSession.query.filter_by(id=id, deleted=False).first()
+    if class_session:
+        class_session.info = request.json['info']
+        db.session.add(class_session)
+        db.session.commit()
+        return jsonify(message="Class Session updated successfully."), 201
+    else:
+        return jsonify(message="Class Session does not exist."), 404
+
+
+@app.route('/api/v1.0/class_session', methods=['DELETE'])
+def delete_class_session():
+    """
+    This api deletes a class_session record by its id.
+    """
+    id = request.args.get('id', None)
+
+    class_session = ClassSession.query.filter_by(id=id, deleted=False).first()
+    if class_session:
+        class_session.deleted = True
+        db.session.add(class_session)
+        db.session.commit()
+        return jsonify(message="Class session deleted successfully."), 201
+    else:
+        return jsonify(message="Class session does not exist."), 404
+
+
+@app.route('/api/v1.0/class_session', methods=['GET'])
+def get_class_session():
+    """
+    This api gets a class_session record by its id.
+    """
+    id = request.args.get('id', None)
+
+    class_session = ClassSession.query.filter_by(id=id, deleted=False).first()
+    if class_session:
+        return jsonify(class_session_schema.dump(class_session)), 201
+    else:
+        return jsonify(message="Class session does not exist."), 404
+
+
+@app.route('/api/v1.0/class_sessions', methods=['GET'])
+def get_class_sessions():
+    """
+    This api gets a list of class_session record by course_id.
+    """
+    course_id = request.args.get('course_id', None)
+
+    class_sessions = ClassSession.query.filter_by(course_id=course_id, deleted=False).all()
+    if class_sessions:
+        return jsonify(class_sessions_schema.dump(class_sessions)), 201
+    else:
+        return jsonify(message="Class session does not exist."), 404
+
+
+#------------------------------Teachings Section---------------------------------------------------------------------------------
+@app.route('/api/v1.0/teaching', methods=['POST'])
+def add_teaching():
+    """
+    This api adds one teaching record to the DB.
+    """
+    session_id = request.json['session_id']
+    teacher_id = request.json['teacher_id']
+
+    class_session = ClassSession.query.filter_by(id=session_id, deleted=False).first()
+    teacher = Teacher.query.filter_by(id=teacher_id, deleted=False).first()
+
+    if class_session and teacher:
+        # Class Session and Teacher must both exist
+        already_existed = Teaching.query.filter_by(session_id=session_id, teacher_id=teacher_id, deleted=False).first()
+        if already_existed:
+            return jsonify(message="The class_session entry already exists"), 409
+        else:
+            teaching = Teaching()
+            teaching.teacher = teacher
+            teaching.class_session = class_session
+            teaching.comments = request.json['comments']
+            db.session.add(teaching)
+            db.session.commit()
+            return jsonify(message="Teaching added successfully"), 201
+    else:
+        return jsonify(message="Teacher or Class Session do not exist."), 404
+
+
+@app.route('/api/v1.0/teaching', methods=['PUT'])
+def update_teaching():
+    """
+    This api updates one teaching record in the DB.
+    """
+    session_id = request.json['session_id']
+    teacher_id = request.json['teacher_id']
+
+    teaching = Teaching.query.filter_by(session_id=session_id, teacher_id=teacher_id, deleted=False).first()
+    if teaching:
+        teaching.comments = request.json['comments']
+        db.session.add(teaching)
+        db.session.commit()
+        return jsonify(message="Teaching updated successfully."), 201
+    else:
+        return jsonify(message="Teaching do not exist."), 404
+
+
+@app.route('/api/v1.0/teaching', methods=['DELETE'])
+def delete_teaching():
+    """
+    This api deletes a teaching record by its session_id and teacher_id.
+    """
+    session_id = request.args.get('session_id', None)
+    teacher_id = request.args.get('teacher_id', None)
+
+    teaching = Teaching.query.filter_by(session_id=session_id, teacher_id=teacher_id, deleted=False).first()
+    if teaching:
+        teaching.deleted = True
+        db.session.add(teaching)
+        db.session.commit()
+        return jsonify(message="Teaching deleted successfully."), 201
+    else:
+        return jsonify(message="Teaching do not exist."), 404
+
+
+@app.route('/api/v1.0/teacher_teaching', methods=['GET'])
+def get_teacher_teaching():
+    """
+    This api gets a list of teaching record by its teacher_id.
+    """
+    teacher_id = request.args.get('teacher_id', None)
+
+    teachings = Teaching.query.filter_by(teacher_id=teacher_id, deleted=False).all()
+    if teachings:
+        return jsonify(teachings_schema.dump(teachings)), 201
+    else:
+        return jsonify(message="Teachings do not exist."), 404
+
+
+@app.route('/api/v1.0/class_session_teaching', methods=['GET'])
+def get_class_session_teaching():
+    """
+    This api gets a list of teaching record by its session_id.
+    """
+    session_id = request.args.get('session_id', None)
+
+    teachings = Teaching.query.filter_by(session_id=session_id, deleted=False).all()
+    if teachings:
+        return jsonify(teachings_schema.dump(teachings)), 201
+    else:
+        return jsonify(message="Teachings do not exist."), 404
+
+
+#--------------------------------Taking Class Section--------------------------------------------------------------------------
+@app.route('/api/v1.0/taking_class', methods=['POST'])
+def add_taking_class():
+    """
+    This api adds one taking_class record to the DB.
+    """
+    session_id = request.json['session_id']
+    student_id = request.json['student_id']
+
+    class_session = ClassSession.query.filter_by(id=session_id, deleted=False).first()
+    student = Student.query.filter_by(id=student_id, deleted=False).first()
+
+    if class_session and student:
+        # Class Session and Student must both exist
+        already_existed = TakingClass.query.filter_by(session_id=session_id, student_id=student_id, deleted=False).first()
+        if already_existed:
+            return jsonify(message="The class_session entry already exists"), 409
+        else:
+            taking_class = TakingClass()
+            taking_class.student = student
+            taking_class.class_session = class_session
+            taking_class.comments = request.json['comments']
+            db.session.add(taking_class)
+            db.session.commit()
+            return jsonify(message="TakingClass added successfully"), 201
+    else:
+        return jsonify(message="Student or Class Session do not exist."), 404
+
+
+@app.route('/api/v1.0/taking_class', methods=['PUT'])
+def update_taking_class():
+    """
+    This api updates one taking_class record in the DB.
+    """
+    session_id = request.json['session_id']
+    student_id = request.json['student_id']
+
+    taking_class = TakingClass.query.filter_by(session_id=session_id, student_id=student_id, deleted=False).first()
+    if taking_class:
+        taking_class.comments = request.json['comments']
+        db.session.add(taking_class)
+        db.session.commit()
+        return jsonify(message="TakingClass updated successfully."), 201
+    else:
+        return jsonify(message="TakingClass do not exist."), 404
+
+
+@app.route('/api/v1.0/taking_class', methods=['DELETE'])
+def delete_taking_class():
+    """
+    This api deletes a taking_class record by its session_id and student_id.
+    """
+    session_id = request.args.get('session_id', None)
+    student_id = request.args.get('student_id', None)
+
+    taking_class = TakingClass.query.filter_by(session_id=session_id, student_id=student_id, deleted=False).first()
+    if taking_class:
+        taking_class.deleted = True
+        db.session.add(taking_class)
+        db.session.commit()
+        return jsonify(message="TakingClass deleted successfully."), 201
+    else:
+        return jsonify(message="TakingClass do not exist."), 404
+
+
+@app.route('/api/v1.0/student_taking_class', methods=['GET'])
+def get_student_taking_class():
+    """
+    This api gets a list of taking_class record by its student_id.
+    """
+    student_id = request.args.get('student_id', None)
+
+    taking_classes = TakingClass.query.filter_by(student_id=student_id, deleted=False).all()
+    if taking_classes:
+        return jsonify(taking_classes_schema.dump(taking_classes)), 201
+    else:
+        return jsonify(message="TakingClasss do not exist."), 404
+
+
+@app.route('/api/v1.0/class_session_taking_class', methods=['GET'])
+def get_class_session_taking_class():
+    """
+    This api gets a list of taking_class record by its session_id.
+    """
+    session_id = request.args.get('session_id', None)
+
+    taking_classes = TakingClass.query.filter_by(session_id=session_id, deleted=False).all()
+    if taking_classes:
+        return jsonify(taking_classes_schema.dump(taking_classes)), 201
+    else:
+        return jsonify(message="TakingClasss do not exist."), 404
 
 # @app.route('/api/v1.0/users/<int:user_id>', methods=['DELETE'])
 # def delete_user(user_id):
@@ -706,6 +1032,9 @@ Todos:
     M 3. Add CRUDs to all classes
     4. Add security to all APIs
     5. Add login function
+    6. Document all APIs in Excel file
+    7. Split single file into multiple files
+    8. Update DB design diagram to reflect the latest state
 """
 
 
