@@ -245,30 +245,29 @@ def db_seed():
 # All APIs communicate using JSON format
 # API routes are /api/v1.0/name_of_api/optional_parameters
 #---------------------------Student Section----------------------------------------------------------
-@app.route('/api/v1.0/students', methods=['POST'])
+@app.route('/api/v1.0/student', methods=['POST'])
 def add_student():
     """
     This api adds one student to the DB.
     """
     name = request.json['name']
-    deleted = request.json['deleted']
 
     already_existed = User.query.filter_by(name=name).first()
     if already_existed:
         return jsonify(message='The student already exists'), 409
     else:
-        student = Student(name=name, deleted=deleted)
+        student = Student(name=name)
         db.session.add(student)
         db.session.commit()
         return jsonify(message="Student created successfully"), 201
 
 
-@app.route('/api/v1.0/students/<int:student_id>', methods=['GET'])
-def get_student(student_id):
+@app.route('/api/v1.0/student', methods=['GET'])
+def get_student():
     """
     This api gets one student from the DB by the student's id.
     """
-    id = student_id
+    id = request.args.get('student_id', None)
 
     student = Student.query.filter_by(id=id, deleted=False).first()
     if student:
@@ -290,12 +289,12 @@ def get_students():
         return jsonify(message="No students found"), 404
 
 
-@app.route('/api/v1.0/students/<int:student_id>', methods=['PUT'])
-def update_student(student_id):
+@app.route('/api/v1.0/student', methods=['PUT'])
+def update_student():
     """
     This api updates a student's information based on the student's id.
     """
-    id = student_id
+    id = request.args.get('student_id', None)
 
     student = Student.query.filter_by(id=id, deleted=False).first()
     if student:
@@ -307,12 +306,12 @@ def update_student(student_id):
         return jsonify(message="Student not found"), 404
 
 
-@app.route('/api/v1.0/students/<int:student_id>', methods=['DELETE'])
-def delete_student(student_id):
+@app.route('/api/v1.0/student', methods=['DELETE'])
+def delete_student():
     """
     This api deletes a student by student's id from the DB.
     """
-    id = student_id
+    id = request.args.get('student_id', None)
 
     student = Student.query.filter_by(id=id, deleted=False).first()
     if student:
@@ -324,7 +323,7 @@ def delete_student(student_id):
         return jsonify(message="Student not found"), 404
 
 #-------------------Teachers Section--------------------------------------------------------
-@app.route('/api/v1.0/teachers', methods=['POST'])
+@app.route('/api/v1.0/teacher', methods=['POST'])
 def add_teacher():
     """
     This api adds one teacher to the DB.
@@ -341,12 +340,12 @@ def add_teacher():
         return jsonify(message="Teacher created successfully"), 201
 
 
-@app.route('/api/v1.0/teachers/<int:teacher_id>', methods=['GET'])
-def get_teacher(teacher_id):
+@app.route('/api/v1.0/teacher', methods=['GET'])
+def get_teacher():
     """
     This api gets one teacher from the DB by the teacher's id.
     """
-    id = teacher_id
+    id = request.args.get('teacher_id', None)
 
     teacher = Teacher.query.filter_by(id=id, deleted=False).first()
     if teacher:
@@ -367,12 +366,12 @@ def get_teachers():
         return jsonify(message="No teachers found"), 404
 
 
-@app.route('/api/v1.0/teachers/<int:teacher_id>', methods=['PUT'])
-def update_teacher(teacher_id):
+@app.route('/api/v1.0/teacher', methods=['PUT'])
+def update_teacher():
     """
     This api updates a teacher's information based on the teacher's id
     """
-    id = teacher_id
+    id = request.args.get('teacher_id', None)
 
     teacher = Teacher.query.filter_by(id=id, deleted=False).first()
     if teacher:
@@ -384,12 +383,12 @@ def update_teacher(teacher_id):
         return jsonify(message="Teacher not found"), 404
 
 
-@app.route('/api/v1.0/teachers/<int:teacher_id>', methods=['DELETE'])
-def delete_teacher(teacher_id):
+@app.route('/api/v1.0/teacher', methods=['DELETE'])
+def delete_teacher():
     """
     This api deletes a teacher by teacher's id from the DB.
     """
-    id = teacher_id
+    id = request.args.get('teacher_id', None)
 
     teacher = Teacher.query.filter_by(id=id, deleted=False).first()
     if teacher:
@@ -401,7 +400,7 @@ def delete_teacher(teacher_id):
         return jsonify(message="Teacher not found"), 404
 
 #-------------------Courses Section--------------------------------------------------------
-@app.route('/api/v1.0/courses', methods=['POST'])
+@app.route('/api/v1.0/course', methods=['POST'])
 def add_course():
     """
     This api adds one course to the DB.
@@ -418,12 +417,12 @@ def add_course():
         return jsonify(message="Course created successfully"), 201
 
 
-@app.route('/api/v1.0/courses/<int:course_id>', methods=['GET'])
-def get_course(course_id):
+@app.route('/api/v1.0/course', methods=['GET'])
+def get_course():
     """
     This api gets one course from the DB by the course's id.
     """
-    id = course_id
+    id = request.args.get('course_id', None)
 
     course = Course.query.filter_by(id=id, deleted=False).first()
     if course:
@@ -444,12 +443,12 @@ def get_courses():
         return jsonify(message="No courses found"), 404
 
 
-@app.route('/api/v1.0/courses/<int:course_id>', methods=['PUT'])
-def update_course(course_id):
+@app.route('/api/v1.0/course', methods=['PUT'])
+def update_course():
     """
     This api updates a course's information based on the course's id
     """
-    id = course_id
+    id = request.args.get('course_id', None)
 
     course = Course.query.filter_by(id=id, deleted=False).first()
     if course:
@@ -461,12 +460,12 @@ def update_course(course_id):
         return jsonify(message="Course not found"), 404
 
 
-@app.route('/api/v1.0/courses/<int:course_id>', methods=['DELETE'])
-def delete_course(course_id):
+@app.route('/api/v1.0/course', methods=['DELETE'])
+def delete_course():
     """
     This api deletes a course by course's id from the DB.
     """
-    id = course_id
+    id = request.args.get('course_id', None)
 
     course = Course.query.filter_by(id=id, deleted=False).first()
     if course:
@@ -478,7 +477,7 @@ def delete_course(course_id):
         return jsonify(message="Course not found"), 404
 
 #-----------------------Users Section-----------------------------------------
-@app.route('/api/v1.0/users', methods=['POST'])
+@app.route('/api/v1.0/user', methods=['POST'])
 def add_user():
     """
     This api adds one user to the DB.
@@ -495,12 +494,12 @@ def add_user():
         return jsonify(message="User created successfully"), 201
 
 
-@app.route('/api/v1.0/users/<int:user_id>', methods=['GET'])
-def get_user(user_id):
+@app.route('/api/v1.0/user', methods=['GET'])
+def get_user():
     """
     This api gets one user from the DB by the user's id.
     """
-    id = user_id
+    id = request.args.get('user_id', None)
 
     user = User.query.filter_by(id=id, deleted=False).first()
     if user:
@@ -521,12 +520,12 @@ def get_users():
         return jsonify(message="No users found"), 404
 
 
-@app.route('/api/v1.0/users/<int:user_id>', methods=['PUT'])
-def update_user(user_id):
+@app.route('/api/v1.0/user', methods=['PUT'])
+def update_user():
     """
     This api updates a user's information based on the user's id
     """
-    id = user_id
+    id = request.args.get('user_id', None)
 
     user = User.query.filter_by(id=id, deleted=False).first()
     if user:
@@ -538,12 +537,12 @@ def update_user(user_id):
         return jsonify(message="User not found"), 404
 
 
-@app.route('/api/v1.0/users/<int:user_id>', methods=['DELETE'])
+@app.route('/api/v1.0/user', methods=['DELETE'])
 def delete_user(user_id):
     """
     This api deletes a user by user's id from the DB.
     """
-    id = user_id
+    id = request.args.get('user_id', None)
 
     user = User.query.filter_by(id=id, deleted=False).first()
     if user:
@@ -600,6 +599,33 @@ def update_course_credit():
     else:
         return jsonify(message="Course credit do not exist."), 404
 
+@app.route('/api/v1.0/student_course_credits', methods=['GET'])
+def get_student_course_credits():
+    """
+    This api gets a list of course_credit record by its student_id.
+    """
+    student_id = request.args.get('student_id', None)
+
+    course_credits = CourseCredit.query.filter_by(student_id=student_id, deleted=False).all()
+    if course_credits:
+        return jsonify(course_credits_schema.dump(course_credits)), 201
+    else:
+        return jsonify(message="Course credits do not exist."), 404
+
+
+@app.route('/api/v1.0/course_course_credits', methods=['GET'])
+def get_course_course_credits():
+    """
+    This api gets a list of course_credit record by its course_id.
+    """
+    course_id = request.args.get('course_id', None)
+
+    course_credits = CourseCredit.query.filter_by(course_id=course_id, deleted=False).all()
+    if course_credits:
+        return jsonify(course_credits_schema.dump(course_credits)), 201
+    else:
+        return jsonify(message="Course credits do not exist."), 404
+
 
 @app.route('/api/v1.0/course_credit', methods=['DELETE'])
 def delete_course_credit():
@@ -617,34 +643,6 @@ def delete_course_credit():
         return jsonify(message="Course credit deleted successfully."), 201
     else:
         return jsonify(message="Course credit do not exist."), 404
-
-
-@app.route('/api/v1.0/student_course_credit', methods=['GET'])
-def get_student_course_credit():
-    """
-    This api gets a list of course_credit record by its student_id.
-    """
-    student_id = request.args.get('student_id', None)
-
-    course_credits = CourseCredit.query.filter_by(student_id=student_id, deleted=False).all()
-    if course_credits:
-        return jsonify(course_credits_schema.dump(course_credits)), 201
-    else:
-        return jsonify(message="Course credits do not exist."), 404
-
-
-@app.route('/api/v1.0/course_course_credit', methods=['GET'])
-def get_course_course_credit():
-    """
-    This api gets a list of course_credit record by its course_id.
-    """
-    course_id = request.args.get('course_id', None)
-
-    course_credits = CourseCredit.query.filter_by(course_id=course_id, deleted=False).all()
-    if course_credits:
-        return jsonify(course_credits_schema.dump(course_credits)), 201
-    else:
-        return jsonify(message="Course credits do not exist."), 404
 
 
 #------------------------------Parent Hood Section-------------------------------------------------------------------------
@@ -694,6 +692,34 @@ def update_parent_hood():
         return jsonify(message="Parent hood do not exist."), 404
 
 
+@app.route('/api/v1.0/student_parent_hoods', methods=['GET'])
+def get_student_parent_hoods():
+    """
+    This api gets a list of parent_hood record by its student_id.
+    """
+    student_id = request.args.get('student_id', None)
+
+    parent_hoods = ParentHood.query.filter_by(student_id=student_id, deleted=False).all()
+    if parent_hoods:
+        return jsonify(parent_hoods_schema.dump(parent_hoods)), 201
+    else:
+        return jsonify(message="Parent hoods do not exist."), 404
+
+
+@app.route('/api/v1.0/parent_parent_hoods', methods=['GET'])
+def get_parent_parent_hoods():
+    """
+    This api gets a list of parent_hood record by its parent_id.
+    """
+    parent_id = request.args.get('parent_id', None)
+
+    parent_hoods = ParentHood.query.filter_by(parent_id=parent_id, deleted=False).all()
+    if parent_hoods:
+        return jsonify(parent_hoods_schema.dump(parent_hoods)), 201
+    else:
+        return jsonify(message="Parent hoods do not exist."), 404
+
+
 @app.route('/api/v1.0/parent_hood', methods=['DELETE'])
 def delete_parent_hood():
     """
@@ -710,34 +736,6 @@ def delete_parent_hood():
         return jsonify(message="Parent hood deleted successfully."), 201
     else:
         return jsonify(message="Parent hood do not exist."), 404
-
-
-@app.route('/api/v1.0/student_parent_hood', methods=['GET'])
-def get_student_parent_hood():
-    """
-    This api gets a list of parent_hood record by its student_id.
-    """
-    student_id = request.args.get('student_id', None)
-
-    parent_hoods = ParentHood.query.filter_by(student_id=student_id, deleted=False).all()
-    if parent_hoods:
-        return jsonify(parent_hoods_schema.dump(parent_hoods)), 201
-    else:
-        return jsonify(message="Parent hoods do not exist."), 404
-
-
-@app.route('/api/v1.0/parent_parent_hood', methods=['GET'])
-def get_parent_parent_hood():
-    """
-    This api gets a list of parent_hood record by its parent_id.
-    """
-    parent_id = request.args.get('parent_id', None)
-
-    parent_hoods = ParentHood.query.filter_by(parent_id=parent_id, deleted=False).all()
-    if parent_hoods:
-        return jsonify(parent_hoods_schema.dump(parent_hoods)), 201
-    else:
-        return jsonify(message="Parent hoods do not exist."), 404
 
 
 #------------------------------------Class Session Section---------------------------------------------------
@@ -779,23 +777,6 @@ def update_class_session():
         return jsonify(message="Class Session does not exist."), 404
 
 
-@app.route('/api/v1.0/class_session', methods=['DELETE'])
-def delete_class_session():
-    """
-    This api deletes a class_session record by its id.
-    """
-    id = request.args.get('id', None)
-
-    class_session = ClassSession.query.filter_by(id=id, deleted=False).first()
-    if class_session:
-        class_session.deleted = True
-        db.session.add(class_session)
-        db.session.commit()
-        return jsonify(message="Class session deleted successfully."), 201
-    else:
-        return jsonify(message="Class session does not exist."), 404
-
-
 @app.route('/api/v1.0/class_session', methods=['GET'])
 def get_class_session():
     """
@@ -820,6 +801,23 @@ def get_class_sessions():
     class_sessions = ClassSession.query.filter_by(course_id=course_id, deleted=False).all()
     if class_sessions:
         return jsonify(class_sessions_schema.dump(class_sessions)), 201
+    else:
+        return jsonify(message="Class session does not exist."), 404
+
+
+@app.route('/api/v1.0/class_session', methods=['DELETE'])
+def delete_class_session():
+    """
+    This api deletes a class_session record by its id.
+    """
+    id = request.args.get('id', None)
+
+    class_session = ClassSession.query.filter_by(id=id, deleted=False).first()
+    if class_session:
+        class_session.deleted = True
+        db.session.add(class_session)
+        db.session.commit()
+        return jsonify(message="Class session deleted successfully."), 201
     else:
         return jsonify(message="Class session does not exist."), 404
 
@@ -871,6 +869,34 @@ def update_teaching():
         return jsonify(message="Teaching do not exist."), 404
 
 
+@app.route('/api/v1.0/teacher_teachings', methods=['GET'])
+def get_teacher_teachings():
+    """
+    This api gets a list of teaching record by its teacher_id.
+    """
+    teacher_id = request.args.get('teacher_id', None)
+
+    teachings = Teaching.query.filter_by(teacher_id=teacher_id, deleted=False).all()
+    if teachings:
+        return jsonify(teachings_schema.dump(teachings)), 201
+    else:
+        return jsonify(message="Teachings do not exist."), 404
+
+
+@app.route('/api/v1.0/class_session_teachings', methods=['GET'])
+def get_class_session_teaching():
+    """
+    This api gets a list of teaching record by its session_id.
+    """
+    session_id = request.args.get('session_id', None)
+
+    teachings = Teaching.query.filter_by(session_id=session_id, deleted=False).all()
+    if teachings:
+        return jsonify(teachings_schema.dump(teachings)), 201
+    else:
+        return jsonify(message="Teachings do not exist."), 404
+
+
 @app.route('/api/v1.0/teaching', methods=['DELETE'])
 def delete_teaching():
     """
@@ -887,34 +913,6 @@ def delete_teaching():
         return jsonify(message="Teaching deleted successfully."), 201
     else:
         return jsonify(message="Teaching do not exist."), 404
-
-
-@app.route('/api/v1.0/teacher_teaching', methods=['GET'])
-def get_teacher_teaching():
-    """
-    This api gets a list of teaching record by its teacher_id.
-    """
-    teacher_id = request.args.get('teacher_id', None)
-
-    teachings = Teaching.query.filter_by(teacher_id=teacher_id, deleted=False).all()
-    if teachings:
-        return jsonify(teachings_schema.dump(teachings)), 201
-    else:
-        return jsonify(message="Teachings do not exist."), 404
-
-
-@app.route('/api/v1.0/class_session_teaching', methods=['GET'])
-def get_class_session_teaching():
-    """
-    This api gets a list of teaching record by its session_id.
-    """
-    session_id = request.args.get('session_id', None)
-
-    teachings = Teaching.query.filter_by(session_id=session_id, deleted=False).all()
-    if teachings:
-        return jsonify(teachings_schema.dump(teachings)), 201
-    else:
-        return jsonify(message="Teachings do not exist."), 404
 
 
 #--------------------------------Taking Class Section--------------------------------------------------------------------------
@@ -964,6 +962,34 @@ def update_taking_class():
         return jsonify(message="TakingClass do not exist."), 404
 
 
+@app.route('/api/v1.0/student_taking_classes', methods=['GET'])
+def get_student_taking_classes():
+    """
+    This api gets a list of taking_class record by its student_id.
+    """
+    student_id = request.args.get('student_id', None)
+
+    taking_classes = TakingClass.query.filter_by(student_id=student_id, deleted=False).all()
+    if taking_classes:
+        return jsonify(taking_classes_schema.dump(taking_classes)), 201
+    else:
+        return jsonify(message="TakingClasss do not exist."), 404
+
+
+@app.route('/api/v1.0/class_session_taking_classes', methods=['GET'])
+def get_class_session_taking_classes():
+    """
+    This api gets a list of taking_class record by its session_id.
+    """
+    session_id = request.args.get('session_id', None)
+
+    taking_classes = TakingClass.query.filter_by(session_id=session_id, deleted=False).all()
+    if taking_classes:
+        return jsonify(taking_classes_schema.dump(taking_classes)), 201
+    else:
+        return jsonify(message="TakingClasss do not exist."), 404
+
+
 @app.route('/api/v1.0/taking_class', methods=['DELETE'])
 def delete_taking_class():
     """
@@ -981,33 +1007,6 @@ def delete_taking_class():
     else:
         return jsonify(message="TakingClass do not exist."), 404
 
-
-@app.route('/api/v1.0/student_taking_class', methods=['GET'])
-def get_student_taking_class():
-    """
-    This api gets a list of taking_class record by its student_id.
-    """
-    student_id = request.args.get('student_id', None)
-
-    taking_classes = TakingClass.query.filter_by(student_id=student_id, deleted=False).all()
-    if taking_classes:
-        return jsonify(taking_classes_schema.dump(taking_classes)), 201
-    else:
-        return jsonify(message="TakingClasss do not exist."), 404
-
-
-@app.route('/api/v1.0/class_session_taking_class', methods=['GET'])
-def get_class_session_taking_class():
-    """
-    This api gets a list of taking_class record by its session_id.
-    """
-    session_id = request.args.get('session_id', None)
-
-    taking_classes = TakingClass.query.filter_by(session_id=session_id, deleted=False).all()
-    if taking_classes:
-        return jsonify(taking_classes_schema.dump(taking_classes)), 201
-    else:
-        return jsonify(message="TakingClasss do not exist."), 404
 
 # @app.route('/api/v1.0/users/<int:user_id>', methods=['DELETE'])
 # def delete_user(user_id):
@@ -1027,14 +1026,10 @@ def get_class_session_taking_class():
 
 """
 Todos:
-    M 1. jsonify returned objects from the DB
-    2. Add pagination support to returned lists
-    M 3. Add CRUDs to all classes
-    4. Add security to all APIs
-    5. Add login function
-    6. Document all APIs in Excel file
-    7. Split single file into multiple files
-    8. Update DB design diagram to reflect the latest state
+    1. Add security to all APIs
+    2. Add login function
+    3. Add pagination support to returned lists
+    4. Split single file into multiple files
 """
 
 
