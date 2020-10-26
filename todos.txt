@@ -1,0 +1,6 @@
+0. Organize the APIs in blueprints.
+1. Get the APIs working again after re-factoring.
+2. Add in the user management function.
+3. Add in more contents for the DB.
+4. Program the UI.
+5. Connect the wechat app with the backend server.
