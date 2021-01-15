@@ -51,9 +51,22 @@ $ python3 flaskAPI.py
 
 Use postman to work with the API interfaces.
 
+## View the SQLite Database
+
+Install SQL Browser
+
+On Windows, download from [`SQLite Brower`](https://sqlitebrowser.org/dl/) and install
+
+On Ubuntu use the following shell commands:
+```sh
+$ sudo add-apt-repository -y ppa:linuxgndu/sqlitebrowser
+$ sudo apt-get update
+$ sudo apt-get install sqlitebrowser
+```
 
 
-## Project structure (Under construction, this is just a template)
+
+## Project structure (Under construction, this part is just a template as the placeholder)
 
 After you check out this code you may need to rename folder `project` to something more relevant your needs. I prefer to have own name for each project. Next step to change all mentions of the word `project` in your code. I don't add any code generators for this project since anyway make code reviews every time starting new Flask project by adding or removing extensions or some parts of the source code.
 
