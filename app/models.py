@@ -1,10 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
 from flask_marshmallow import Marshmallow
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 # from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 # from flask_mail import Mail, Message
 import os
-from app import db, ma
+from app import db, ma, login
 
 # All relationships are configured on the "many" side of a one-to-many relationship.
 class Student(db.Model):
@@ -18,13 +20,33 @@ class Student(db.Model):
         return "<Student(name='%s')>" % (self.name)
 
 
-class Teacher(db.Model):
+class Teacher(UserMixin, db.Model):
     __tablename__ = "teachers"
 
     id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean, default=False)
-    name = Column(String)
+    deleted = Column(Boolean, default=False) # Field to mark whether the account is deleted.
+    validated = Column(Boolean, default=False) # Field to mark whether the teacher's account is validated by the admin.
+    name = Column(String) # Real name of the account owner
+    phone = Column(String) # Phone number of the account owner
+    email = Column(String) # Email of the account owner
+    pwhash = Column(String) # Hashed password field.
 
+
+    def set_pwhash(self, password):
+        """
+        This function sets the password hash from the password inputed by the user.
+        """
+        self.pwhash = generate_password_hash(password)
+
+    def check_password(self, password):
+        """
+        This function checks the password by using the check_password_hash function.
+        """
+        return check_password_hash(self.pwhash, password)
+
+@login.user_loader
+def load_teacher(id):
+    return Teacher.query.get(int(id))
 
 class User(db.Model):
     __tablename__ = "users"
