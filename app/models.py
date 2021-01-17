@@ -30,6 +30,12 @@ class Teacher(UserMixin, db.Model):
     phone = Column(String) # Phone number of the account owner
     email = Column(String) # Email of the account owner
     pwhash = Column(String) # Hashed password field.
+    roles = Column(Integer, default=0)
+    # roles are represented similar to the Linux file permission scheme: rwx
+    # However, in here, the three bits represent: admin, principal, teacher
+    # So, --t (1) means the role is a teacher
+    # -pt (3) means the roles are principal and teacher
+    # apt (7) means the roles are admin, principal and teacher
 
 
     def set_pwhash(self, password):
