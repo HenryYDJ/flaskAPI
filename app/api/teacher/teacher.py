@@ -2,20 +2,28 @@ from flask import Blueprint, jsonify, request
 from app import db
 from app.models import Teacher, teacher_schema, teachers_schema
 from app.api.teacher import bluePrint
+from datetime import datetime
 
 #-------------------Teachers Section--------------------------------------------------------
 @bluePrint.route('/api/v1.0/teacher', methods=['POST'])
-def add_teacher():
+def register_teacher():
     """
-    This api adds one teacher to the DB.
+    This api registers one teacher to the DB.
     """
-    name = request.json['name']
+    phone = request.json['phone']
+    email = request.json['email']
 
-    already_existed = Teacher.query.filter_by(name=name, deleted=False).first()
+    # First check if the phone number or email already exists.
+    already_existed = Teacher.query.filter(Teacher.deleted==False).filter((Teacher.phone==phone)|(Teacher.email==email)).first()
     if already_existed:
-        return jsonify(message='The teacher already exists'), 409
+        return jsonify(message='The phone number or email is already used.'), 409
     else:
-        teacher = Teacher(name=name)
+        teacher = Teacher()
+        teacher.phone = phone
+        teacher.email = email
+        teacher.name = request.json['name']
+        teacher.set_pwhash(request.json['password'])
+        teacher.register_time = datetime.utcnow()
         db.session.add(teacher)
         db.session.commit()
         return jsonify(message="Teacher created successfully"), 201
