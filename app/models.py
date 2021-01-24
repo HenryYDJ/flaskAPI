@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime
 from flask_marshmallow import Marshmallow
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -30,6 +30,9 @@ class Teacher(UserMixin, db.Model):
     phone = Column(String) # Phone number of the account owner
     email = Column(String) # Email of the account owner
     pwhash = Column(String) # Hashed password field.
+    register_time = Column(DateTime) # Server date and time when registration was submitted. (All datetime are in UTC time)
+    approve_time = Column(DateTime) # Server date and time when the use is approved.
+    approver = Column(Integer, ForeignKey('teachers.id'), default=None) # Approved by whom
     roles = Column(Integer, default=0)
     # roles are represented similar to the Linux file permission scheme: rwx
     # However, in here, the three bits represent: admin, principal, teacher
