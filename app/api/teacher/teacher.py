@@ -1,11 +1,11 @@
-from flask import Blueprint, jsonify, request
+from flask import jsonify, request
 from app import db
 from app.models import Teacher, teacher_schema, teachers_schema
-from app.api.teacher import bluePrint
+from app.api import bluePrint
 from datetime import datetime
 
 #-------------------Teachers Section--------------------------------------------------------
-@bluePrint.route('/api/v1.0/teacher', methods=['POST'])
+@bluePrint.route('/teacher', methods=['POST'])
 def register_teacher():
     """
     This api registers one teacher to the DB.
@@ -29,7 +29,7 @@ def register_teacher():
         return jsonify(message="Teacher created successfully"), 201
 
 
-@bluePrint.route('/api/v1.0/teacher', methods=['GET'])
+@bluePrint.route('/teacher', methods=['GET'])
 def get_teacher():
     """
     This api gets one teacher from the DB by the teacher's id.
@@ -43,7 +43,7 @@ def get_teacher():
         return jsonify(message="Teacher not found"), 404
 
 
-@bluePrint.route('/api/v1.0/teachers', methods=['GET'])
+@bluePrint.route('/teachers', methods=['GET'])
 def get_teachers():
     """
     This api gets all teachers from the DB.
@@ -55,7 +55,7 @@ def get_teachers():
         return jsonify(message="No teachers found"), 404
 
 
-@bluePrint.route('/api/v1.0/teacher', methods=['PUT'])
+@bluePrint.route('/teacher', methods=['PUT'])
 def update_teacher():
     """
     This api updates a teacher's information based on the teacher's id
@@ -72,7 +72,7 @@ def update_teacher():
         return jsonify(message="Teacher not found"), 404
 
 
-@bluePrint.route('/api/v1.0/teacher', methods=['DELETE'])
+@bluePrint.route('/teacher', methods=['DELETE'])
 def delete_teacher():
     """
     This api deletes a teacher by teacher's id from the DB.

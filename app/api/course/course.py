@@ -1,10 +1,10 @@
-from flask import Blueprint, jsonify, request
+from flask import jsonify, request
 from app import db
 from app.models import Course, course_schema, courses_schema
-from app.api.course import bluePrint
+from app.api import bluePrint
 
 #-------------------Courses Section--------------------------------------------------------
-@bluePrint.route('/api/v1.0/course', methods=['POST'])
+@bluePrint.route('/course', methods=['POST'])
 def add_course():
     """
     This api adds one course to the DB.
@@ -21,7 +21,7 @@ def add_course():
         return jsonify(message="Course created successfully"), 201
 
 
-@bluePrint.route('/api/v1.0/course', methods=['GET'])
+@bluePrint.route('/course', methods=['GET'])
 def get_course():
     """
     This api gets one course from the DB by the course's id.
@@ -35,7 +35,7 @@ def get_course():
         return jsonify(message="Course not found"), 404
 
 
-@bluePrint.route('/api/v1.0/courses', methods=['GET'])
+@bluePrint.route('/courses', methods=['GET'])
 def get_courses():
     """
     This api gets all courses from the DB.
@@ -47,7 +47,7 @@ def get_courses():
         return jsonify(message="No courses found"), 404
 
 
-@bluePrint.route('/api/v1.0/course', methods=['PUT'])
+@bluePrint.route('/course', methods=['PUT'])
 def update_course():
     """
     This api updates a course's information based on the course's id
@@ -64,7 +64,7 @@ def update_course():
         return jsonify(message="Course not found"), 404
 
 
-@bluePrint.route('/api/v1.0/course', methods=['DELETE'])
+@bluePrint.route('/course', methods=['DELETE'])
 def delete_course():
     """
     This api deletes a course by course's id from the DB.
