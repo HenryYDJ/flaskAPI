@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager
 import os
 
 from config import Config
@@ -11,6 +12,7 @@ db = SQLAlchemy()
 ma = Marshmallow()
 login = LoginManager()
 migrate = Migrate()
+jwt = JWTManager()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -19,18 +21,10 @@ def create_app(config_class=Config):
     ma.init_app(app)
     login.init_app(app)
     migrate.init_app(app=app, db=db)
+    jwt.init_app(app)
 
-    from app.api.student import bluePrint as student_bp
-    app.register_blueprint(student_bp)
-
-    from app.api.teacher import bluePrint as teacher_bp
-    app.register_blueprint(teacher_bp)
-
-    from app.api.course import bluePrint as course_bp
-    app.register_blueprint(course_bp)
-
-    from app.api.user import bluePrint as user_bp
-    app.register_blueprint(user_bp)
+    from app.api import bluePrint
+    app.register_blueprint(bluePrint, url_prefix='/api/v1.0')
 
     return app
 

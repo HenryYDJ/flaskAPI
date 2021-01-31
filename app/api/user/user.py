@@ -1,10 +1,10 @@
 from flask import Blueprint, jsonify, request
 from app import db
 from app.models import User, user_schema, users_schema
-from app.api.user import bluePrint
+from app.api import bluePrint
 
 #-----------------------Users Section-----------------------------------------
-@bluePrint.route('/api/v1.0/user', methods=['POST'])
+@bluePrint.route('/user', methods=['POST'])
 def add_user():
     """
     This api adds one user to the DB.
@@ -21,7 +21,7 @@ def add_user():
         return jsonify(message="User created successfully"), 201
 
 
-@bluePrint.route('/api/v1.0/user', methods=['GET'])
+@bluePrint.route('/user', methods=['GET'])
 def get_user():
     """
     This api gets one user from the DB by the user's id.
@@ -35,7 +35,7 @@ def get_user():
         return jsonify(message="User not found"), 404
 
 
-@bluePrint.route('/api/v1.0/users', methods=['GET'])
+@bluePrint.route('/users', methods=['GET'])
 def get_users():
     """
     This api gets all users from the DB.
@@ -47,7 +47,7 @@ def get_users():
         return jsonify(message="No users found"), 404
 
 
-@bluePrint.route('/api/v1.0/user', methods=['PUT'])
+@bluePrint.route('/user', methods=['PUT'])
 def update_user():
     """
     This api updates a user's information based on the user's id
@@ -64,7 +64,7 @@ def update_user():
         return jsonify(message="User not found"), 404
 
 
-@bluePrint.route('/api/v1.0/user', methods=['DELETE'])
+@bluePrint.route('/user', methods=['DELETE'])
 def delete_user(user_id):
     """
     This api deletes a user by user's id from the DB.

@@ -53,6 +53,11 @@ class Teacher(UserMixin, db.Model):
         """
         return check_password_hash(self.pwhash, password)
 
+    def to_dict(self):
+        return {
+            'id': self.id
+        }
+
 @login.user_loader
 def load_teacher(id):
     return Teacher.query.get(int(id))
@@ -139,6 +144,26 @@ class TakingClass(db.Model):
     class_session = db.relationship("ClassSession", backref="session_takings")
     student = db.relationship("Student", backref="student_takings")
 
+class TokenBlacklist(db.Model):
+    """
+    Model for black listed JWT tokens.
+    """
+    id = Column(Integer, primary_key=True)
+    jti = Column(String(36), nullable=False)
+    token_type = Column(String(10), nullable=False)
+    user_id = Column(String(50), nullable=False)
+    revoked = Column(Boolean, nullable=False)
+    expires = Column(DateTime, nullable=False)
+
+    def to_dict(self):
+        return {
+            'token_id': self.id,
+            'jti': self.jti,
+            'token_type': self.token_type,
+            'user_identity': self.user_identity,
+            'revoked': self.revoked,
+            'expires': self.expires
+        }
 
 #--------------------------Marshmallow Schema----------------------------------------
 class StudentSchema(ma.Schema):

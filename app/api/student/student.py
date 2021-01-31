@@ -1,10 +1,10 @@
-from flask import Blueprint, jsonify, request
+from flask import jsonify, request
 from app import db
 from app.models import Student, User, student_schema, students_schema
-from app.api.student import bluePrint
+from app.api import bluePrint
 
 #---------------------------Student Section----------------------------------------------------------
-@bluePrint.route('/api/v1.0/student', methods=['POST'])
+@bluePrint.route('/student', methods=['POST'])
 def add_student():
     """
     This api adds one student to the DB.
@@ -21,7 +21,7 @@ def add_student():
         return jsonify(message="Student created successfully"), 201
 
 
-@bluePrint.route('/api/v1.0/student', methods=['GET'])
+@bluePrint.route('/student', methods=['GET'])
 def get_student():
     """
     This api gets one student from the DB by the student's id.
@@ -35,7 +35,7 @@ def get_student():
         return jsonify(message="Student not found"), 404
 
 
-@bluePrint.route('/api/v1.0/students', methods=['GET'])
+@bluePrint.route('/students', methods=['GET'])
 def get_students():
     """
     This api gets all students from the DB.
@@ -48,7 +48,7 @@ def get_students():
         return jsonify(message="No students found"), 404
 
 
-@bluePrint.route('/api/v1.0/student', methods=['PUT'])
+@bluePrint.route('/student', methods=['PUT'])
 def update_student():
     """
     This api updates a student's information based on the student's id.
@@ -65,7 +65,7 @@ def update_student():
         return jsonify(message="Student not found"), 404
 
 
-@bluePrint.route('/api/v1.0/student', methods=['DELETE'])
+@bluePrint.route('/student', methods=['DELETE'])
 def delete_student():
     """
     This api deletes a student by student's id from the DB.
