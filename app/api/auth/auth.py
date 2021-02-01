@@ -50,8 +50,6 @@ def logout():
     """
     This API revokes all the tokens including access and refresh tokens that belong to the user.
     """
-    identity_claim = current_app.config['JWT_IDENTITY_CLAIM']
-    raw_jwt = get_raw_jwt()
-    user_id = raw_jwt[identity_claim].get('id')
-    logout_user(user_id)
+    current_user = get_jwt_identity()
+    logout_user(current_user.get('id'))
     return jsonify(message="Token revoked."), 200
