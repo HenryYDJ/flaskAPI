@@ -42,13 +42,42 @@ def is_token_revoked(decoded_token):
         return True
 
 def revoke_token(jti):
-    prune_db()
     try:
         token = TokenBlacklist.query.filter_by(jti=jti).one()
         token.revoked = True
         db.session.commit()
     except NoResultFound:
         raise TokenNotFound("Could not find the token")
+
+def get_user_tokens(user_id):
+    """
+    Returns all of the tokens, revoked and unrevoked, that are stored for the
+    given user
+    """
+    try:
+        tokens = TokenBlacklist.query.filter_by(user_id=user_id).all()
+        return tokens
+    except NoResultFound:
+        raise TokenNotFound("No token for this user")
+
+def get_user_unrevoked_tokens(user_id):
+    """
+    Returns all of the unrevoked tokens that belong to given user.
+    """
+    try:
+        tokens = TokenBlacklist.query.filter(TokenBlacklist.user_id==user_id, TokenBlacklist.revoked==False).all()
+        return tokens
+    except NoResultFound:
+        raise TokenNotFound("No token for this user")
+
+def logout_user(user_id):
+    active_tokens = get_user_unrevoked_tokens(user_id)
+    if active_tokens:
+        for token in active_tokens:
+            token.revoked = True
+        db.session.commit()
+    
+
 
 def prune_db():
     """
@@ -57,7 +86,6 @@ def prune_db():
     now = datetime.utcnow()
     expired_tokens = TokenBlacklist.query.filter(TokenBlacklist.expires < now).all()
     for token in expired_tokens:
-        print(token)
         db.session.delete(token)
     
     db.session.commit()

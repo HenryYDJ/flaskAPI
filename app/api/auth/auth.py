@@ -6,7 +6,7 @@ from flask_jwt_extended import (
     jwt_required, jwt_refresh_token_required,
     get_jwt_identity, jwt_required, get_raw_jwt
 )
-from .auth_utils import add_token_to_db, is_token_revoked, revoke_token, prune_db
+from .auth_utils import add_token_to_db, is_token_revoked, revoke_token, prune_db, logout_user
 from app import jwt
 
 @jwt.token_in_blacklist_loader
@@ -47,6 +47,11 @@ def refrest_token():
 @bluePrint.route('/auth/logout', methods=['DELETE'])
 @jwt_required
 def logout():
-    jti = get_raw_jwt()['jti']
-    revoke_token(jti)
+    """
+    This API revokes all the tokens including access and refresh tokens that belong to the user.
+    """
+    identity_claim = current_app.config['JWT_IDENTITY_CLAIM']
+    raw_jwt = get_raw_jwt()
+    user_id = raw_jwt[identity_claim].get('id')
+    logout_user(user_id)
     return jsonify(message="Token revoked."), 200
