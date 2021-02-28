@@ -13,3 +13,5 @@ class Config(object):
     JWT_BLACKLIST_ENABLED = True
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=1)
+    WECHAT_APPID = os.environ.get('WECHAT_APPID')
+    WECHAT_APP_SECRET = os.environ.get('WECHAT_APP_SECRET')

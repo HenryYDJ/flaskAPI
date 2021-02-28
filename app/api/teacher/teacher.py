@@ -34,13 +34,15 @@ def get_teacher():
     """
     This api gets one teacher from the DB by the teacher's id.
     """
-    id = request.args.get('teacher_id', None)
+    # id = request.args.get('teacher_id', None)
 
-    teacher = Teacher.query.filter_by(id=id, deleted=False).first()
-    if teacher:
-        return jsonify(teacher_schema.dump(teacher))
-    else:
-        return jsonify(message="Teacher not found"), 404
+    # teacher = Teacher.query.filter_by(id=id, deleted=False).first()
+    # if teacher:
+    #     return jsonify(teacher_schema.dump(teacher))
+    # else:
+    #     return jsonify(message="Teacher not found"), 404
+
+    return jsonify(message = "hi")
 
 
 @bluePrint.route('/teachers', methods=['GET'])
