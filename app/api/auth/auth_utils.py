@@ -8,8 +8,10 @@ from app import db
 
 from .exceptions import TokenNotFound
 
+
 def posix_utc_to_datetime(posix_utc):
     return datetime.fromtimestamp(posix_utc, tz=timezone.utc)
+
 
 def add_token_to_db(encoded_token, identity_claim):
     decoded_token = decode_token(encoded_token)
@@ -21,14 +23,15 @@ def add_token_to_db(encoded_token, identity_claim):
     revoked = False
 
     db_token = TokenBlacklist(
-        jti = jti,
-        token_type = token_type,
-        user_id = user_id,
-        expires = expires,
-        revoked = revoked
+        jti=jti,
+        token_type=token_type,
+        user_id=user_id,
+        expires=expires,
+        revoked=revoked
     )
     db.session.add(db_token)
     db.session.commit()
+
 
 def is_token_revoked(decoded_token):
     """
@@ -41,6 +44,7 @@ def is_token_revoked(decoded_token):
     except NoResultFound:
         return True
 
+
 def revoke_token(jti):
     try:
         token = TokenBlacklist.query.filter_by(jti=jti).one()
@@ -48,6 +52,7 @@ def revoke_token(jti):
         db.session.commit()
     except NoResultFound:
         raise TokenNotFound("Could not find the token")
+
 
 def get_user_tokens(user_id):
     """
@@ -60,15 +65,17 @@ def get_user_tokens(user_id):
     except NoResultFound:
         raise TokenNotFound("No token for this user")
 
+
 def get_user_unrevoked_tokens(user_id):
     """
     Returns all of the unrevoked tokens that belong to given user.
     """
     try:
-        tokens = TokenBlacklist.query.filter(TokenBlacklist.user_id==user_id, TokenBlacklist.revoked==False).all()
+        tokens = TokenBlacklist.query.filter(TokenBlacklist.user_id == user_id, TokenBlacklist.revoked == False).all()
         return tokens
     except NoResultFound:
         raise TokenNotFound("No token for this user")
+
 
 def logout_user(user_id):
     active_tokens = get_user_unrevoked_tokens(user_id)
@@ -76,7 +83,6 @@ def logout_user(user_id):
         for token in active_tokens:
             token.revoked = True
         db.session.commit()
-    
 
 
 def prune_db():
@@ -87,5 +93,5 @@ def prune_db():
     expired_tokens = TokenBlacklist.query.filter(TokenBlacklist.expires < now).all()
     for token in expired_tokens:
         db.session.delete(token)
-    
+
     db.session.commit()

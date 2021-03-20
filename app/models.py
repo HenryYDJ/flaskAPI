@@ -8,6 +8,7 @@ from flask_login import UserMixin
 import os
 from app import db, ma, login
 
+
 # All relationships are configured on the "many" side of a one-to-many relationship.
 class Student(db.Model):
     __tablename__ = 'students'
@@ -24,22 +25,23 @@ class Teacher(UserMixin, db.Model):
     __tablename__ = "teachers"
 
     id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean, default=False) # Field to mark whether the account is deleted.
-    validated = Column(Boolean, default=False) # Field to mark whether the teacher's account is validated by the admin.
-    name = Column(String) # Real name of the account owner
-    phone = Column(String) # Phone number of the account owner
-    email = Column(String) # Email of the account owner
-    pwhash = Column(String) # Hashed password field.
-    register_time = Column(DateTime) # Server date and time when registration was submitted. (All datetime are in UTC time)
-    approve_time = Column(DateTime) # Server date and time when the use is approved.
-    approver = Column(Integer, ForeignKey('teachers.id'), default=None) # Approved by whom
+    deleted = Column(Boolean, default=False)  # Field to mark whether the account is deleted.
+    validated = Column(Boolean, default=False)  # Field to mark whether the teacher's account is validated by the admin.
+    name = Column(String)  # Real name of the account owner
+    phone = Column(String)  # Phone number of the account owner
+    email = Column(String)  # Email of the account owner
+    pwhash = Column(String)  # Hashed password field.
+    register_time = Column(DateTime)  # Server date and time when registration was submitted. (All datetime are in
+    # UTC time)
+    approve_time = Column(DateTime)  # Server date and time when the use is approved.
+    approver = Column(Integer, ForeignKey('teachers.id'), default=None)  # Approved by whom
     roles = Column(Integer, default=0)
     # roles are represented similar to the Linux file permission scheme: rwx
     # However, in here, the three bits represent: admin, principal, teacher
     # So, --t (1) means the role is a teacher
     # -pt (3) means the roles are principal and teacher
     # apt (7) means the roles are admin, principal and teacher
-
+    avatar = Column(String)  # The avatar url of the user, updates everytime the user signs in.
 
     def set_pwhash(self, password):
         """
@@ -58,16 +60,26 @@ class Teacher(UserMixin, db.Model):
             'id': self.id
         }
 
+
 @login.user_loader
 def load_teacher(id):
     return Teacher.query.get(int(id))
+
 
 class User(db.Model):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
     deleted = Column(Boolean, default=False)
-    name = Column(String)
+    realName = Column(String)
+    openID = Column(String)  # OpenID of the wechat user
+    sessionKey = Column(String)  # Session Key of the wechat user
+    gender = Column(Integer)
+    language = Column(String)
+    city = Column(String)
+    province = Column(String)
+    nickName = Column(String)
+    avatarUrl = Column(String)
 
 
 class Course(db.Model):
@@ -144,6 +156,7 @@ class TakingClass(db.Model):
     class_session = db.relationship("ClassSession", backref="session_takings")
     student = db.relationship("Student", backref="student_takings")
 
+
 class TokenBlacklist(db.Model):
     """
     Model for black listed JWT tokens.
@@ -165,7 +178,34 @@ class TokenBlacklist(db.Model):
             'expires': self.expires
         }
 
-#--------------------------Marshmallow Schema----------------------------------------
+
+class ModificationLog(db.Model):
+    """
+    Model for tracking who made modifications to the DB
+    Only tracking modifications, creations are not tracked since the creator and creation time is included almost all the times
+    """
+    __tablename__ = "modificationLog"
+
+    id = Column(Integer, primary_key=True)
+    operator_wechat = Column(Integer, ForeignKey("users.id"))
+    operator_web = Column(Integer, ForeignKey("teachers.id"))
+    modification_time = Column(DateTime)
+    table = Column(String)
+    entry = Column(Integer)
+    column = Column(String)
+    original = Column(String)
+    new = Column(String)
+
+    # def __repr__(self):
+    #     if self.operator_wechat:
+    #         return "Wechat user %s changed table: %s entry: %s column: %s from %s to %s" % \
+    #                (self.operator_wechat, self.table, self.entry, self.column, self.original, self.new)
+    #     else:
+    #         return "Web user %s changed table: %s entry: %s column: %s from %s to %s" % \
+    #                (self.operator_web, self.table, self.entry, self.column, self.original, self.new)
+
+
+# --------------------------Marshmallow Schema----------------------------------------
 class StudentSchema(ma.Schema):
     class Meta:
         fields = ["name"]
@@ -209,6 +249,7 @@ class ClassSessionSchema(ma.Schema):
 class ParentHoodSchema(ma.Schema):
     class Meta:
         fields = ["comments"]
+
 
 student_schema = StudentSchema()
 students_schema = StudentSchema(many=True)
