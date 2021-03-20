@@ -130,3 +130,12 @@ dmypy.json
 
 # MySQL workbench
 .bak
+
+# Visual Studio
+.vs
+
+# VS Code
+.vscode
+
+# PyCharm
+.idea
