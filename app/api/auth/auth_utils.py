@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
+from functools import wraps
 
+from flask import jsonify
 from sqlalchemy.orm.exc import NoResultFound
-from flask_jwt_extended import decode_token
+from flask_jwt_extended import decode_token, verify_jwt_in_request, get_jwt_identity, get_jwt_claims
 
-from app.models import TokenBlacklist
+from app.models import TokenBlacklist, User, Teacher
+
 from app import db
 
 from .exceptions import TokenNotFound
@@ -95,3 +98,36 @@ def prune_db():
         db.session.delete(token)
 
     db.session.commit()
+
+
+def jwt_roles_required(roles):
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request()
+            client = get_jwt_claims().get('client')
+            user_id = get_jwt_identity().get('id')
+            # First need to get the user based on the client
+            if client == 0:
+                user = Teacher.query.filter(Teacher.deleted == False).filter(Teacher.id == user_id).first()
+            elif client == 1:
+                user = User.query.filter(User.deleted == False).filter(User.openID == user_id).first()
+            else:
+                return jsonify(msg='wrong client'), 401
+
+            # Check if the user is qualified for the action or resources
+            if user:
+                user_roles = user.get_roles()
+                if user_roles >= roles:
+                    return fn(*args, **kwargs)
+                else:
+                    return jsonify(msg='not qualified'), 403
+            else:
+                return jsonify(msg='no such user'), 400
+
+        return decorator
+    return wrapper
+
+
+
+

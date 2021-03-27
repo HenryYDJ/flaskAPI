@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 01b3201aacad
+Revision ID: b77e54a73c3f
 Revises: 
-Create Date: 2021-01-24 23:43:06.430542
+Create Date: 2021-03-27 17:14:30.834138
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '01b3201aacad'
+revision = 'b77e54a73c3f'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -42,13 +42,31 @@ def upgrade():
     sa.Column('approve_time', sa.DateTime(), nullable=True),
     sa.Column('approver', sa.Integer(), nullable=True),
     sa.Column('roles', sa.Integer(), nullable=True),
+    sa.Column('avatar', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['approver'], ['teachers.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('token_blacklist',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('jti', sa.String(length=36), nullable=False),
+    sa.Column('token_type', sa.String(length=10), nullable=False),
+    sa.Column('user_id', sa.String(length=50), nullable=False),
+    sa.Column('revoked', sa.Boolean(), nullable=False),
+    sa.Column('expires', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('deleted', sa.Boolean(), nullable=True),
-    sa.Column('name', sa.String(), nullable=True),
+    sa.Column('realName', sa.String(), nullable=True),
+    sa.Column('openID', sa.String(), nullable=True),
+    sa.Column('sessionKey', sa.String(), nullable=True),
+    sa.Column('gender', sa.Integer(), nullable=True),
+    sa.Column('language', sa.String(), nullable=True),
+    sa.Column('city', sa.String(), nullable=True),
+    sa.Column('province', sa.String(), nullable=True),
+    sa.Column('approved', sa.Boolean(), nullable=True),
+    sa.Column('roles', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('classSessions',
@@ -67,6 +85,20 @@ def upgrade():
     sa.ForeignKeyConstraint(['course_id'], ['courses.id'], ),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
     sa.PrimaryKeyConstraint('student_id', 'course_id')
+    )
+    op.create_table('modificationLog',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('operator_wechat', sa.Integer(), nullable=True),
+    sa.Column('operator_web', sa.Integer(), nullable=True),
+    sa.Column('modification_time', sa.DateTime(), nullable=True),
+    sa.Column('table', sa.String(), nullable=True),
+    sa.Column('entry', sa.Integer(), nullable=True),
+    sa.Column('column', sa.String(), nullable=True),
+    sa.Column('original', sa.String(), nullable=True),
+    sa.Column('new', sa.String(), nullable=True),
+    sa.ForeignKeyConstraint(['operator_web'], ['teachers.id'], ),
+    sa.ForeignKeyConstraint(['operator_wechat'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('parenthoods',
     sa.Column('student_id', sa.Integer(), nullable=False),
@@ -103,9 +135,11 @@ def downgrade():
     op.drop_table('teachings')
     op.drop_table('takingClasses')
     op.drop_table('parenthoods')
+    op.drop_table('modificationLog')
     op.drop_table('courseCredits')
     op.drop_table('classSessions')
     op.drop_table('users')
+    op.drop_table('token_blacklist')
     op.drop_table('teachers')
     op.drop_table('students')
     op.drop_table('courses')

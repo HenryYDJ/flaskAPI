@@ -78,9 +78,16 @@ class User(db.Model):
     language = Column(String)
     city = Column(String)
     province = Column(String)
-    nickName = Column(String)
-    avatarUrl = Column(String)
+    approved = Column(Boolean, default=False)
+    roles = Column(Integer, default=0)
 
+    def to_dict(self):
+        return {
+            'id': self.openID
+        }
+
+    def get_roles(self):
+        return self.roles
 
 class Course(db.Model):
     __tablename__ = "courses"
@@ -90,7 +97,7 @@ class Course(db.Model):
     name = Column(String)
 
     def __repr__(self):
-        return "<Course(course name='%s')>" % (self.course_name)
+        return "<Course(course name='%s')>" % self.name
 
 
 class CourseCredit(db.Model):
