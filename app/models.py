@@ -15,10 +15,12 @@ class Student(db.Model):
 
     id = Column(Integer, primary_key=True)
     deleted = Column(Boolean, default=False)
-    name = Column(String)
+    realName = Column(String)
+    dob = Column(DateTime)  # Date of birth
+    gender = Column(Boolean)  # 0 for girl and 1 for boy
 
     def __repr__(self):
-        return "<Student(name='%s')>" % (self.name)
+        return "<Student(name='%s')>" % (self.realName)
 
 
 class Teacher(UserMixin, db.Model):
@@ -27,7 +29,7 @@ class Teacher(UserMixin, db.Model):
     id = Column(Integer, primary_key=True)
     deleted = Column(Boolean, default=False)  # Field to mark whether the account is deleted.
     validated = Column(Boolean, default=False)  # Field to mark whether the teacher's account is validated by the admin.
-    name = Column(String)  # Real name of the account owner
+    realName = Column(String)  # Real name of the account owner
     phone = Column(String)  # Phone number of the account owner
     email = Column(String)  # Email of the account owner
     pwhash = Column(String)  # Hashed password field.
@@ -119,6 +121,9 @@ class ClassSession(db.Model):
     id = Column(Integer, primary_key=True)
     course_id = Column(Integer, ForeignKey("courses.id"))
     deleted = Column(Boolean, default=False)
+    startTime = Column(DateTime)  # UTC time of the session start time
+    endTime = Column(DateTime)  # UTC time of the session end time
+
     info = Column(String)
 
     # Relationships
