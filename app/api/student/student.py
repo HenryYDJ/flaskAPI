@@ -3,6 +3,11 @@ from app import db
 from app.models import Student, User, student_schema, students_schema
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
+from datetime import datetime
+import pytz
+from flask_jwt_extended import get_jwt_identity, get_jwt_claims
+
+tz_utc = pytz.utc  # Add the utc tzinfo as a global variable
 
 
 # --------------------------Student Section----------------------------------------------------------
@@ -17,14 +22,26 @@ def add_student():
     #   1. Figure out how to send Datetime in JSON request
     #   2. Parse the Date in JSON and decide the time zone
     #   3. Convert the datetime into UTC and store in DB
+    #   4. Add the creator info based on the client info
 
     realName = request.json['realName']
     dob = request.json['dob']
     gender = request.json['gender']
+    creator_id = get_jwt_identity().get('id')
+    request_client = get_jwt_claims().get('client')
+    print(creator_id)
+    print(request_client)
 
+    try:
+        dob_time = datetime.strptime(dob, '%Y-%m-%dT%H:%M:%S.%f%z')
+    except:
+        return jsonify(message="Wrong DOB format"), 400
+
+    # Convert DOB to UTC format to store in DB
+    dob_utc = dob_time.astimezone(tz_utc)
     student = Student()
     student.realName = realName
-    student.dob = dob
+    student.dob = dob_utc
     student.gender = gender
 
     db.session.add(student)
