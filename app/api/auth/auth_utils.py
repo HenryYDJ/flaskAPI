@@ -107,6 +107,7 @@ def jwt_roles_required(roles):
             verify_jwt_in_request()
             client = get_jwt_claims().get('client')
             user_id = get_jwt_identity().get('id')
+            required_roles = roles
             # First need to get the user based on the client
             if client == 0:
                 user = Teacher.query.filter(Teacher.deleted == False).filter(Teacher.id == user_id).first()
@@ -118,7 +119,9 @@ def jwt_roles_required(roles):
             # Check if the user is qualified for the action or resources
             if user:
                 user_roles = user.get_roles()
-                if user_roles >= roles:
+                if user_roles >= required_roles:
+                    # If the user's role in DB is >= required roles, meaning the user has equal or above
+                    # qualification for the API
                     return fn(*args, **kwargs)
                 else:
                     return jsonify(msg='not qualified'), 403
