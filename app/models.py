@@ -1,11 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime
-from flask_marshmallow import Marshmallow
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
-# from flask_jwt_extended import JWTManager, jwt_required, create_access_token
-# from flask_mail import Mail, Message
-import os
 from app import db, ma
 
 
