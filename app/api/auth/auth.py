@@ -11,6 +11,7 @@ from app import jwt, db
 from app.api import bluePrint
 from app.models import User
 from .auth_utils import add_token_to_db, is_token_revoked, logout_user, jwt_roles_required
+from app.dbUtils.dbUtils import query_existing_phone_user
 
 
 @jwt.token_in_blacklist_loader
@@ -24,21 +25,22 @@ def login_web():
         return jsonify(message="No JSON in request"), 400
 
     phone = request.json.get('phone', None)
-    email = request.json.get('email', None)
     password = request.json.get('password', None)
 
-    user = User.query.filter(User.deleted == False).filter(
-        (User.phone == phone) | (User.email == email)).first()
-    if user.check_password(password):
-        access_token = create_access_token(identity=user.to_dict())
-        refresh_token = create_refresh_token(identity=user.to_dict())
-        ret = {
-            'access_token': access_token,
-            'refresh_token': refresh_token
-        }
-        add_token_to_db(access_token, current_app.config['JWT_IDENTITY_CLAIM'])
-        add_token_to_db(refresh_token, current_app.config['JWT_IDENTITY_CLAIM'])
-        return jsonify(ret), 201
+    user = query_existing_phone_user(phone)
+    if user:
+        if user.check_password(password):
+            access_token = create_access_token(identity=user.to_dict())
+            refresh_token = create_refresh_token(identity=user.to_dict())
+            ret = {
+                'access_token': access_token,
+                'refresh_token': refresh_token
+            }
+            add_token_to_db(access_token, current_app.config['JWT_IDENTITY_CLAIM'])
+            add_token_to_db(refresh_token, current_app.config['JWT_IDENTITY_CLAIM'])
+            return jsonify(ret), 201
+        else:
+            return jsonify(message="Bad credentials"), 401
     else:
         return jsonify(message="Bad credentials"), 401
 

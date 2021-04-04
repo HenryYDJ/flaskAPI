@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz
 from app.api.auth.auth_utils import jwt_roles_required
 
-from app.dbUtils.dbUtils import query_existing_user
+from app.dbUtils.dbUtils import query_existing_user, query_validated_user, query_existing_phone_user
 
 
 # -------------------Teachers Section--------------------------------------------------------
@@ -16,17 +16,14 @@ def register_teacher():
     This api registers one teacher to the DB.
     """
     phone = request.json['phone']
-    email = request.json['email']
 
     # First check if the phone number or email already exists.
-    already_existed = User.query.filter(User.deleted == False).filter(
-        (User.phone == phone) | (User.email == email)).first()
+    already_existed = query_existing_phone_user(phone)
     if already_existed:
         return jsonify(message='The phone number or email is already used.'), 409
     else:
         teacher = User()
         teacher.phone = phone
-        teacher.email = email
         teacher.realName = request.json['realName']
         teacher.set_pwhash(request.json['password'])
         teacher.register_time = datetime.utcnow()
@@ -42,8 +39,8 @@ def dbutil_test():
     This api registers one teacher to the DB.
     """
     user_id = request.json['id']
-    user = query_existing_user(user_id)
-    print(type(user))
+    user = query_validated_user(user_id)
+    print(user)
     return jsonify(message="success"), 201
 
 
