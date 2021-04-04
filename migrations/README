@@ -1,4 +1,5 @@
 Generic single-database configuration.
+
 Use the following commands in the terminal
 - To create the migration repository:
 flask db init

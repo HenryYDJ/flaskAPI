@@ -1,10 +1,12 @@
 from flask import jsonify, request
 from app import db
-from app.models import Teacher, teacher_schema, teachers_schema
+from app.models import User
 from app.api import bluePrint
 from datetime import datetime
 import pytz
 from app.api.auth.auth_utils import jwt_roles_required
+
+from app.dbUtils.dbUtils import query_existing_user
 
 
 # -------------------Teachers Section--------------------------------------------------------
@@ -17,22 +19,34 @@ def register_teacher():
     email = request.json['email']
 
     # First check if the phone number or email already exists.
-    already_existed = Teacher.query.filter(Teacher.deleted == False).filter(
-        (Teacher.phone == phone) | (Teacher.email == email)).first()
+    already_existed = User.query.filter(User.deleted == False).filter(
+        (User.phone == phone) | (User.email == email)).first()
     if already_existed:
         return jsonify(message='The phone number or email is already used.'), 409
     else:
-        teacher = Teacher()
+        teacher = User()
         teacher.phone = phone
         teacher.email = email
         teacher.realName = request.json['realName']
         teacher.set_pwhash(request.json['password'])
         teacher.register_time = datetime.utcnow()
+        teacher.roles = 4  # The role number for teachers are >= 4
         db.session.add(teacher)
         db.session.commit()
         return jsonify(message="Teacher created successfully"), 201
 
-#
+
+@bluePrint.route('/dbutilstest', methods=['POST'])
+def dbutil_test():
+    """
+    This api registers one teacher to the DB.
+    """
+    user_id = request.json['id']
+    user = query_existing_user(user_id)
+    print(type(user))
+    return jsonify(message="success"), 201
+
+
 # @bluePrint.route('/teacher', methods=['GET'])
 # def get_teacher():
 #     """

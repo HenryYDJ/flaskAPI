@@ -6,7 +6,7 @@ from flask_login import UserMixin
 # from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 # from flask_mail import Mail, Message
 import os
-from app import db, ma, login
+from app import db, ma
 
 
 # All relationships are configured on the "many" side of a one-to-many relationship.
@@ -18,32 +18,34 @@ class Student(db.Model):
     realName = Column(String)
     dob = Column(DateTime)  # Date of birth
     gender = Column(Boolean)  # 0 for girl and 1 for boy
+    creator_id = Column(Integer, ForeignKey('users.id'))
 
     def __repr__(self):
-        return "<Student(name='%s')>" % (self.realName)
+        return "<Student(name='%s')>" % self.realName
 
 
-class Teacher(UserMixin, db.Model):
-    __tablename__ = "teachers"
+class User(db.Model):
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
     deleted = Column(Boolean, default=False)  # Field to mark whether the account is deleted.
-    validated = Column(Boolean, default=False)  # Field to mark whether the teacher's account is validated by the admin.
     realName = Column(String)  # Real name of the account owner
     phone = Column(String)  # Phone number of the account owner
     email = Column(String)  # Email of the account owner
     pwhash = Column(String)  # Hashed password field.
     register_time = Column(DateTime)  # Server date and time when registration was submitted. (All datetime are in
     # UTC time)
-    approve_time = Column(DateTime)  # Server date and time when the use is approved.
-    approver = Column(Integer, ForeignKey('teachers.id'), default=None)  # Approved by whom
     roles = Column(Integer, default=0)
-    # roles are represented similar to the Linux file permission scheme: rwx
-    # However, in here, the three bits represent: admin, principal, teacher
-    # So, --t (1) means the role is a teacher
-    # -pt (3) means the roles are principal and teacher
-    # apt (7) means the roles are admin, principal and teacher
     avatar = Column(String)  # The avatar url of the user, updates everytime the user signs in.
+    openID = Column(String)  # wechat openID of the user
+    sessionKey = Column(String)  # wechat session Key of the user
+    gender = Column(Boolean)
+    language = Column(String)
+    city = Column(String)
+    province = Column(String)
+    validated = Column(Boolean, default=False)  # Field to mark whether the user's account is validated by the admin.
+    approve_time = Column(DateTime)  # Server date and time when the use is approved.
+    approver = Column(Integer, ForeignKey('users.id'), default=None)  # Approved by whom
 
     def set_pwhash(self, password):
         """
@@ -62,34 +64,9 @@ class Teacher(UserMixin, db.Model):
             'id': self.id
         }
 
-
-@login.user_loader
-def load_teacher(id):
-    return Teacher.query.get(int(id))
-
-
-class User(db.Model):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean, default=False)
-    realName = Column(String)
-    openID = Column(String)  # OpenID of the wechat user
-    sessionKey = Column(String)  # Session Key of the wechat user
-    gender = Column(Integer)
-    language = Column(String)
-    city = Column(String)
-    province = Column(String)
-    approved = Column(Boolean, default=False)
-    roles = Column(Integer, default=0)
-
-    def to_dict(self):
-        return {
-            'id': self.openID
-        }
-
     def get_roles(self):
         return self.roles
+
 
 class Course(db.Model):
     __tablename__ = "courses"
@@ -147,13 +124,13 @@ class Teaching(db.Model):
     __tablename__ = "teachings"
 
     session_id = Column(Integer, ForeignKey("classSessions.id"), primary_key=True)
-    teacher_id = Column(Integer, ForeignKey("teachers.id"), primary_key=True)
+    teacher_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     deleted = Column(Boolean, default=False)
     comments = Column(String)
 
     # Relationships
     class_session = db.relationship("ClassSession", backref="session_teachings")
-    teacher = db.relationship("Teacher", backref="teacher_teachings")
+    teacher = db.relationship("User", backref="teacher_teachings")
 
 
 class TakingClass(db.Model):
@@ -199,8 +176,7 @@ class ModificationLog(db.Model):
     __tablename__ = "modificationLog"
 
     id = Column(Integer, primary_key=True)
-    operator_wechat = Column(Integer, ForeignKey("users.id"))
-    operator_web = Column(Integer, ForeignKey("teachers.id"))
+    operator = Column(Integer, ForeignKey("users.id"))
     modification_time = Column(DateTime)
     table = Column(String)
     entry = Column(Integer)
