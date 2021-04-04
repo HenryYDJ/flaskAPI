@@ -9,7 +9,7 @@ import requests
 
 from app import jwt, db
 from app.api import bluePrint
-from app.models import Teacher, User
+from app.models import User
 from .auth_utils import add_token_to_db, is_token_revoked, logout_user, jwt_roles_required
 
 
@@ -19,7 +19,7 @@ def check_token_revoke_statue(decoded_token):
 
 
 @bluePrint.route('/auth/login', methods=['POST'])
-def login_teacher():
+def login_web():
     if not request.is_json:
         return jsonify(message="No JSON in request"), 400
 
@@ -27,12 +27,11 @@ def login_teacher():
     email = request.json.get('email', None)
     password = request.json.get('password', None)
 
-    teacher = Teacher.query.filter(Teacher.deleted == False).filter(
-        (Teacher.phone == phone) | (Teacher.email == email)).first()
-    additional_claims = {'client': 0}
-    if teacher.check_password(password):
-        access_token = create_access_token(identity=teacher.to_dict(), user_claims=additional_claims)
-        refresh_token = create_refresh_token(identity=teacher.to_dict(), user_claims=additional_claims)
+    user = User.query.filter(User.deleted == False).filter(
+        (User.phone == phone) | (User.email == email)).first()
+    if user.check_password(password):
+        access_token = create_access_token(identity=user.to_dict())
+        refresh_token = create_refresh_token(identity=user.to_dict())
         ret = {
             'access_token': access_token,
             'refresh_token': refresh_token
@@ -66,7 +65,7 @@ def logout():
 
 # -------------------Wechat APIs--------------------------------------------------------
 @bluePrint.route('/wechat/login', methods=['POST'])
-def wechat_login():
+def login_wechat():
     """
     This api logins a user through wechat app.
     """
@@ -80,44 +79,36 @@ def wechat_login():
         'grant_type': 'authorization_code'
     }
     r = requests.get(wechat_code2session_url, params=payload)
+
     openid = r.json()['openid']
     session_key = r.json()['session_key']
-    # First check if the openID already exist in the DB.
-    already_existed = User.query.filter(User.deleted == False).filter(
-        User.openID == openid).first()
-    additional_claims = {'client': 1}
-    if already_existed:
-        already_existed.sessionKey = session_key
-        access_token = create_access_token(identity=already_existed.to_dict(), user_claims=additional_claims)
-        refresh_token = create_refresh_token(identity=already_existed.to_dict(), user_claims=additional_claims)
-        ret = {
-            'access_token': access_token,
-            'refresh_token': refresh_token
-        }
-        add_token_to_db(access_token, current_app.config['JWT_IDENTITY_CLAIM'])
-        add_token_to_db(refresh_token, current_app.config['JWT_IDENTITY_CLAIM'])
 
-        db.session.add(already_existed)
-        db.session.commit()
-        return jsonify(ret), 201
+    # First check if the openID already exist in the DB.
+    user = User.query.filter(User.deleted == False).filter(
+        User.openID == openid).first()
+
+    if user:
+        user.sessionKey = session_key
 
     else:
         user = User()
         user.openID = openid
         user.sessionKey = session_key
 
-        access_token = create_access_token(identity=user.to_dict(), user_claims=additional_claims)
-        refresh_token = create_refresh_token(identity=user.to_dict(), user_claims=additional_claims)
-        ret = {
-            'access_token': access_token,
-            'refresh_token': refresh_token
-        }
-        add_token_to_db(access_token, current_app.config['JWT_IDENTITY_CLAIM'])
-        add_token_to_db(refresh_token, current_app.config['JWT_IDENTITY_CLAIM'])
-        db.session.add(user)
-        db.session.commit()
+    db.session.add(user)
+    db.session.commit()
 
-        return jsonify(ret), 201
+    access_token = create_access_token(identity=user.to_dict())
+    refresh_token = create_refresh_token(identity=user.to_dict())
+    ret = {
+        'access_token': access_token,
+        'refresh_token': refresh_token
+    }
+    add_token_to_db(access_token, current_app.config['JWT_IDENTITY_CLAIM'])
+    add_token_to_db(refresh_token, current_app.config['JWT_IDENTITY_CLAIM'])
+
+    return jsonify(ret), 201
+
 
 
 @bluePrint.route('/auth/wechat_test', methods=['get'])

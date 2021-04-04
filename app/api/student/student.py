@@ -28,9 +28,7 @@ def add_student():
     dob = request.json['dob']
     gender = request.json['gender']
     creator_id = get_jwt_identity().get('id')
-    request_client = get_jwt_claims().get('client')
     print(creator_id)
-    print(request_client)
 
     try:
         dob_time = datetime.strptime(dob, '%Y-%m-%dT%H:%M:%S.%f%z')
@@ -43,6 +41,7 @@ def add_student():
     student.realName = realName
     student.dob = dob_utc
     student.gender = gender
+    student.creator_id = creator_id
 
     db.session.add(student)
     db.session.commit()
