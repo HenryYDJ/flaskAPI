@@ -1,53 +1,70 @@
 from flask import jsonify, request
 from app import db
-from app.models import Student, User, student_schema, students_schema
+from app.models import Student, ParentHood
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from datetime import datetime
-import pytz
 from flask_jwt_extended import get_jwt_identity, get_jwt_claims
-
-tz_utc = pytz.utc  # Add the utc tzinfo as a global variable
+from app.utils.utils import datetime_string_to_utc, Roles, Relationship
+from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_existing_student
 
 
 # --------------------------Student Section----------------------------------------------------------
 @bluePrint.route('/student', methods=['POST'])
-@jwt_roles_required(4)  # At least teacher is required
+@jwt_roles_required(Roles.TEACHER)  # At least teacher is required
 def add_student():
     """
     This api adds one student to the DB.
     """
-
-    # TODO:
-    #   1. Figure out how to send Datetime in JSON request
-    #   2. Parse the Date in JSON and decide the time zone
-    #   3. Convert the datetime into UTC and store in DB
-    #   4. Add the creator info based on the client info
-
-    realName = request.json['realName']
-    dob = request.json['dob']
-    gender = request.json['gender']
+    realName = request.json.get('realName', None)
+    dob = request.json.get('dob', None)
+    gender = request.json.get('gender', None)
     creator_id = get_jwt_identity().get('id')
-    print(creator_id)
-
-    try:
-        dob_time = datetime.strptime(dob, '%Y-%m-%dT%H:%M:%S.%f%z')
-    except:
-        return jsonify(message="Wrong DOB format"), 400
 
     # Convert DOB to UTC format to store in DB
-    dob_utc = dob_time.astimezone(tz_utc)
+    dob_utc = datetime_string_to_utc(dob)
     student = Student()
+    # Query the db to find the User who created this student.
+    creator = query_validated_user(creator_id)
+    if creator:
+        # Check if the creator exists in the User table
+        student.creator = creator
+    else:
+        return jsonify(message="Wrong input"), 400
     student.realName = realName
     student.dob = dob_utc
     student.gender = gender
-    student.creator_id = creator_id
 
     db.session.add(student)
     db.session.commit()
     return jsonify(message="Student created successfully"), 201
 
-#
+
+@bluePrint.route('/parent_hood', methods=['PUT'])
+@jwt_roles_required(Roles.PARENT)  # At least parent is required
+def update_parent_hood():
+    """
+    This api adds parenthood relationship to the DB.
+    """
+    parent_id = request.json.get('parent_id', None)
+    student_id = request.json.get('student_id', None)
+    relation = request.json.get('relation', None)
+
+    parent_hood = query_parent_hood(parent_id, student_id)
+
+    if parent_hood:
+        parent_hood.relation = Relationship.get(relation)  # get the int value of the ralation from the relation dict
+    else:
+        parent_hood = ParentHood()
+        parent_hood.parent = query_validated_user(parent_id)
+        parent_hood.student = query_existing_student(student_id)
+        parent_hood.relation = Relationship.get(relation)
+
+    db.session.add(parent_hood)
+    db.session.commit()
+    return jsonify(message="Updated parent hood info"), 201
+
+
 # @bluePrint.route('/student', methods=['GET'])
 # def get_student():
 #     """

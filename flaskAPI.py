@@ -3,6 +3,9 @@
 # WARNING：
 #       Before deploying to actual server, change the secret key!
 
+# Todo:
+#   1. Implement logger
+
 from app import create_app
 
 app = create_app()

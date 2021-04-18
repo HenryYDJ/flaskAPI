@@ -1,12 +1,19 @@
-from app.models import User
+from app.models import User, Course, CourseCredit, ParentHood, Student
+from app.utils.utils import Roles
 
 
 def query_existing_user(user_id):
+    """
+    This function returns an existing user based on the user_id.
+    """
     user = User.query.filter(User.deleted == False).filter((User.id == user_id)).first()
     return user
 
 
 def query_validated_user(user_id):
+    """
+    This function retrieves one user if it is already validated. Otherwise, a None object is returned.
+    """
     exist_user = query_existing_user(user_id)
     if exist_user.validated:
         return exist_user
@@ -14,6 +21,49 @@ def query_validated_user(user_id):
         return None
 
 
+def query_existing_student(student_id):
+    """
+    This function returns an existing student based on the student_id
+    """
+    student = Student.query.filter(Student.deleted == False).filter(Student.id == student_id).first()
+    return student
+
+
 def query_existing_phone_user(phone_number):
+    """
+    This function retrieves one existing user based on the user's phone number.
+    """
     user = User.query.filter(User.deleted == False).filter((User.phone == phone_number)).first()
     return user
+
+
+def query_existing_course(course_id):
+    course = Course.query.filter(Course.deleted == False).filter(Course.id == course_id).first()
+    return course
+
+
+def query_existing_teacher(teacher_id):
+    """
+    This function retrieves one teacher based on the teacher_id.
+    This returned teacher is not deleted, can can be either validated or not.
+    """
+    teacher = User.query.filter(User.deleted == False).filter(User.id == teacher_id, User.roles == Roles.TEACHER).first()
+    return teacher
+
+
+def query_course_credit(course_id, student_id):
+    """
+    This functions retrieves the course_credit record based on the course_id and student_id
+    """
+    course_credit = CourseCredit.query.filter(CourseCredit.deleted == False)\
+        .filter(CourseCredit.course_id == course_id, CourseCredit.student_id == student_id).first()
+    return course_credit
+
+
+def query_parent_hood(parent_id, student_id):
+    """
+    This function retrieves the parent_hood record based on the parent_id and student_id
+    """
+    parent_hood = ParentHood.query.filter(ParentHood.deleted == False)\
+        .filter(ParentHood.parent_id == parent_id, ParentHood.student_id == student_id).first()
+    return parent_hood
