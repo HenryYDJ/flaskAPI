@@ -14,6 +14,9 @@ class Student(db.Model):
     gender = Column(Boolean)  # 0 for girl and 1 for boy
     creator_id = Column(Integer, ForeignKey('users.id'))
 
+    # Relationship for user who created this student
+    creator = db.relationship("User", backref="created_students")
+
     def __repr__(self):
         return "<Student(name='%s')>" % self.realName
 
@@ -107,7 +110,7 @@ class ParentHood(db.Model):
     student_id = Column(Integer, ForeignKey("students.id"), primary_key=True)
     parent_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     deleted = Column(Boolean, default=False)
-    comments = Column(String)
+    relation = Column(Integer)
 
     # Relationships
     student = db.relationship("Student", backref="parents")

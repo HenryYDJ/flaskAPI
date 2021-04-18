@@ -13,6 +13,8 @@ from app.models import User
 from .auth_utils import add_token_to_db, is_token_revoked, logout_user, jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_phone_user
 
+from app.models import ClassSession
+
 
 @jwt.token_in_blacklist_loader
 def check_token_revoke_statue(decoded_token):
@@ -134,4 +136,18 @@ def roles_test():
     This API revokes all the tokens including access and refresh tokens that belong to the user.
     """
     print("authorized")
+    return jsonify(message="test!!!"), 200
+
+
+@bluePrint.route('/test1', methods=['POST'])
+def rel_test():
+    """
+    This API revokes all the tokens including access and refresh tokens that belong to the user.
+    """
+    course_id = request.json.get('courseID', None)
+
+    class_session = ClassSession()
+    class_session.course_id = course_id
+    db.session.add(class_session)
+    db.session.commit()
     return jsonify(message="test!!!"), 200
