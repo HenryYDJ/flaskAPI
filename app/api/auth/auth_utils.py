@@ -3,7 +3,7 @@ from functools import wraps
 
 from flask import jsonify
 from sqlalchemy.orm.exc import NoResultFound
-from flask_jwt_extended import decode_token, verify_jwt_in_request, get_jwt_identity, get_jwt_claims
+from flask_jwt_extended import decode_token, verify_jwt_in_request, get_jwt_identity
 
 from app.models import TokenBlacklist, User
 

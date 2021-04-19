@@ -4,7 +4,7 @@ from app.models import Student, ParentHood
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from datetime import datetime
-from flask_jwt_extended import get_jwt_identity, get_jwt_claims
+from flask_jwt_extended import get_jwt_identity
 from app.utils.utils import datetime_string_to_utc, Roles, Relationship
 from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_existing_student
 

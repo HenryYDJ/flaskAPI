@@ -1,8 +1,7 @@
 from flask import jsonify, request, current_app
 from flask_jwt_extended import (
     create_access_token, create_refresh_token,
-    jwt_refresh_token_required,
-    get_jwt_identity, jwt_required, get_jwt_claims
+    get_jwt_identity, jwt_required
 )
 
 import requests
@@ -16,7 +15,7 @@ from app.dbUtils.dbUtils import query_existing_phone_user
 from app.models import ClassSession
 
 
-@jwt.token_in_blacklist_loader
+@jwt.token_in_blocklist_loader
 def check_token_revoke_statue(decoded_token):
     return is_token_revoked(decoded_token)
 
@@ -48,7 +47,7 @@ def login_web():
 
 
 @bluePrint.route('/auth/refresh', methods=['POST'])
-@jwt_refresh_token_required
+@jwt_required(refresh=True)
 def refresh_access_token():
     current_user = get_jwt_identity()
     access_token = create_access_token(identity=current_user)
@@ -115,18 +114,18 @@ def login_wechat():
 
 
 
-@bluePrint.route('/auth/wechat_test', methods=['get'])
-@jwt_required
-def wechat_test():
-    """
-    This API revokes all the tokens including access and refresh tokens that belong to the user.
-    """
-    claims = get_jwt_claims().get('client')
-    user_id = get_jwt_identity()
-    print(claims)
-    print(type(claims))
-    print(user_id.get('id'))
-    return jsonify(message="test!!!"), 200
+# @bluePrint.route('/auth/wechat_test', methods=['get'])
+# @jwt_required
+# def wechat_test():
+#     """
+#     This API revokes all the tokens including access and refresh tokens that belong to the user.
+#     """
+#     claims = get_jwt_claims().get('client')
+#     user_id = get_jwt_identity()
+#     print(claims)
+#     print(type(claims))
+#     print(user_id.get('id'))
+#     return jsonify(message="test!!!"), 200
 
 
 @bluePrint.route('/auth/roles_test', methods=['get'])
