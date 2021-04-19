@@ -16,6 +16,7 @@ class Roles:
     """
     This class serves as the enum for roles.
     """
+    EVERYBODY = 0
     STUDENT = 1
     PARENT = 2
     TEACHER = 4

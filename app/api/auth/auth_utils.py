@@ -10,7 +10,7 @@ from app.models import TokenBlacklist, User
 from app import db
 
 from .exceptions import TokenNotFound
-from app.dbUtils.dbUtils import query_validated_user
+from app.dbUtils.dbUtils import query_validated_user, query_existing_user
 
 
 def posix_utc_to_datetime(posix_utc):
@@ -108,7 +108,12 @@ def jwt_roles_required(roles):
             verify_jwt_in_request()
             user_id = get_jwt_identity().get('id')
             required_roles = roles
-            user = query_validated_user(user_id)
+            #  If everybody can access, then just query existing users.
+            # This is to accomodate the register real information of teacher API.
+            if required_roles == 0:
+                user = query_existing_user(user_id)
+            else:
+                user = query_validated_user(user_id)
 
             # Check if the user is qualified for the action or resources
             if user:
