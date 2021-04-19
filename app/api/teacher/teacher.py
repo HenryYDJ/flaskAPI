@@ -8,32 +8,37 @@ from app import db
 from app.models import User
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_teacher, query_validated_user, query_existing_phone_user
+from app.dbUtils.dbUtils import query_existing_teacher, query_validated_user, query_existing_phone_user, query_existing_user
 from app.utils.utils import Roles
 
 
 # -------------------Teachers Section--------------------------------------------------------
 @bluePrint.route('/teacher', methods=['POST'])
+@jwt_roles_required(Roles.EVERYBODY)
 def register_teacher():
     """
-    This api registers one teacher to the DB.
+    This api adds teacher's real information to the DB.
     """
+    teacher_id = get_jwt_identity().get('id')
+
+    teacher = query_existing_user(teacher_id)
     phone = request.json['phone']
 
-    # First check if the phone number or email already exists.
-    already_existed = query_existing_phone_user(phone)
-    if already_existed:
-        return jsonify(message='The phone number or email is already used.'), 409
-    else:
-        teacher = User()
-        teacher.phone = phone
-        teacher.realName = request.json['realName']
-        teacher.set_pwhash(request.json['password'])
+    if teacher:
+        teacher.phone = request.json.get('phone', None)
+        teacher.realName = request.json.get('realName', None)
+        teacher.gender = request.json.get('gender', None)
+        teacher.language = request.json.get('language', 'CN')
+        teacher.province = request.json.get('province', None)
+        teacher.city = request.json.get('city', None)
+        teacher.avatar = request.json.get('avatar', None)
+        teacher.roles = Roles.TEACHER
         teacher.register_time = datetime.utcnow()
-        teacher.roles = Roles.TEACHER  # The role number for teachers are >= 4
         db.session.add(teacher)
         db.session.commit()
         return jsonify(message="Teacher created successfully"), 201
+    else:
+        return jsonify(message='User does not exist'), 409
 
 
 @bluePrint.route('/approve_teacher', methods=['POST'])
