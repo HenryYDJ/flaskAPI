@@ -5,7 +5,8 @@ from app.models import Course, ClassSession
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_course, query_course_credit
-from app.utils.utils import datetime_string_to_utc, Roles
+from app.utils.utils import datetime_string_to_utc, Roles, \
+    datetime_string_to_datetime, convert_to_UTC,dt_list_to_UTC_list
 
 
 # -------------------Courses Section--------------------------------------------------------
@@ -27,43 +28,54 @@ def add_course():
         return jsonify(message="Course created successfully"), 201
 
 
-# @bluePrint.route('/class_session', methods=['POST'])
-# @jwt_roles_required(Roles.TEACHER)  # Only teacher and above can add a course
-# def add_class_session():
-#     """
-#     This api adds one class session to the DB.
-#     This api will take into account whether the event is a recurring one.
-#     """
-#     course_id = request.json.get('course_id', None)
-#     start_time = datetime_string_to_utc(request.json.get('start_time', None))
-#     end_time = datetime_string_to_utc(request.json.get('end_time', None))
-#     info = request.json.get('info', None)
-#     course = query_existing_course(course_id)
-#     repeat_weekly = request.json.get('repeat_weekly', None)
-#     student_ids = request.json.get('student_ids', None)  # This is a list of student ids in the session
+@bluePrint.route('/class_session', methods=['POST'])
+@jwt_roles_required(Roles.TEACHER)  # Only teacher and above can add a course
+def add_class_session():
+    """
+    This api adds one class session or recurring class sessions to the DB.
+    This api will take into account whether the event is a recurring one.
+    The repeat wkdays from request need to be in 0, 1, 2, ... 6 for Mon, Tue, Wed, ... Sun
+    """
+    course_id = request.json.get('course_id', None)
+    # start_time and end_time needs to be in original timezone to preserve information
+    start_time = datetime_string_to_datetime(request.json.get('start_time', None))
+    end_time = datetime_string_to_datetime(request.json.get('end_time', None))
+    info = request.json.get('info', None)
+    course = query_existing_course(course_id)
+    repeat_weekly = request.json.get('repeat_weekly', None)
 
-#     # TODO:
-#     #   1. Repeat the events based on the weekdays
-#     #   2. Get the weekdays on which we need to repeat the event
-#     #   3. Generate repeating events based on the weekdays.
-    
+    if course:
+        if repeat_weekly:
+            repeat_wkdays = request.json.get('repeat_wkdays', None)  # weekdays are in: MO, TU, WE, TH, FR, SA, SU
+            repeat_until = datetime_string_to_datetime(request.json.get('repeat_until', None))
+            start_time_list = list(rrule(WEEKLY, interval=1, until=repeat_until, 
+                wkst=MO, byweekday=repeat_wkdays, dtstart=start_time))
+            end_time_list = list(rrule(WEEKLY, interval=1, until=repeat_until, 
+                wkst=MO, byweekday=repeat_wkdays, dtstart=end_time))
+            start_time_utc_list = dt_list_to_UTC_list(start_time_list)
+            end_time_utc_list = dt_list_to_UTC_list(end_time_list)
+            for s_time, e_time in zip(start_time_utc_list, end_time_utc_list):
+                class_session = ClassSession()
+                class_session.course = course
+                class_session.startTime = s_time
+                class_session.endTime = e_time
+                class_session.info = info
 
-#     if course:
-#         if repeat_weekly:
-#             repeat_wkdays = request.json.get('repeat_wkdays', None)  # weekdays are in: MO, TU, WE, TH, FR, SA, SU
-#             repeat_until = request.json.get('repeat_until', None)
-#             start_time_list = rrule(WEEKLY, interval=1, until=repeat_until, wkst=MO, byweekday=repeat_wkdays, dtstart=start_time)
-#             end_time_list = rrule(WEEKLY, interval=1, until=repeat_until, wkst=MO, byweekday=repeat_wkdays, dtstart=start_time)
-#             pass
-#         else:
-#             class_session = ClassSession()
-#             class_session.course = course
+                db.session.add(class_session)
+                db.session.commit()
+            return jsonify(message="Recurring class sessions added successfully"), 201
+        else:
+            class_session = ClassSession()
+            class_session.course = course
+            class_session.startTime = convert_to_UTC(start_time)
+            class_session.endTime = convert_to_UTC(end_time)
+            class_session.info = info
 
-#             db.session.add(class_session)
-#             db.session.commit()
-#             return jsonify(message="Class session added successfully"), 201
-#     else:
-#         return jsonify(message="Course does not exist"), 400
+            db.session.add(class_session)
+            db.session.commit()
+            return jsonify(message="Class session added successfully"), 201
+    else:
+        return jsonify(message="Course does not exist"), 400
 
 
 @bluePrint.route('/course_credit', methods=['PUT'])

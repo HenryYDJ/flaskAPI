@@ -16,8 +16,8 @@ from app.models import ClassSession
 
 
 @jwt.token_in_blocklist_loader
-def check_token_revoke_statue(decoded_token):
-    return is_token_revoked(decoded_token)
+def check_token_revoke_status(jwt_headers, jwt_payload):
+    return is_token_revoked(jwt_headers, jwt_payload)
 
 
 @bluePrint.route('/auth/login', methods=['POST'])
