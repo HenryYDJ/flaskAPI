@@ -37,11 +37,11 @@ def add_token_to_db(encoded_token, identity_claim):
     db.session.commit()
 
 
-def is_token_revoked(decoded_token):
+def is_token_revoked(jwt_header, jwt_payload):
     """
     Since we add every token to the db, so if a token is not found in the db, it is considered revoked.
     """
-    jti = decoded_token['jti']
+    jti = jwt_payload['jti']
     try:
         token = TokenBlacklist.query.filter_by(jti=jti).one()
         return token.revoked
