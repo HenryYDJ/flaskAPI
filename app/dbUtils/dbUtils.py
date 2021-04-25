@@ -29,6 +29,14 @@ def query_existing_student(student_id):
     return student
 
 
+def query_all_existing_students():
+    """
+    This function returns all undeleted students in the DB
+    """
+    students = Student.query.filter(Student.deleted == False).all()
+    return students
+
+
 def query_existing_phone_user(phone_number):
     """
     This function retrieves one existing user based on the user's phone number.

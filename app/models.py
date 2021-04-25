@@ -20,6 +20,12 @@ class Student(db.Model):
     def __repr__(self):
         return "<Student(name='%s')>" % self.realName
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "real_name": self.realName,
+            "gender": self.gender
+        }
 
 class User(db.Model):
     __tablename__ = "users"

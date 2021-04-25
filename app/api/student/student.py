@@ -6,7 +6,8 @@ from app.api.auth.auth_utils import jwt_roles_required
 from datetime import datetime
 from flask_jwt_extended import get_jwt_identity
 from app.utils.utils import datetime_string_to_utc, Roles, Relationship
-from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_existing_student
+from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_existing_student,\
+    query_all_existing_students
 
 
 # --------------------------Student Section----------------------------------------------------------
@@ -63,6 +64,19 @@ def update_parent_hood():
     db.session.add(parent_hood)
     db.session.commit()
     return jsonify(message="Updated parent hood info"), 201
+
+
+@bluePrint.route('/students', methods=['GET'])
+@jwt_roles_required(Roles.TEACHER)
+def get_students():
+    """
+    This api gets all undeleted students from the DB.
+    """
+    students = query_all_existing_students()
+    if students:
+        return jsonify(message=[student.to_dict() for student in students])
+    else:
+        return jsonify(message="No students found"), 404
 
 
 # @bluePrint.route('/student', methods=['GET'])
