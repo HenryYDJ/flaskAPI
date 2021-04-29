@@ -2,6 +2,7 @@ from flask import jsonify, request
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.utils.utils import Roles
+from app.dbUtils.dbUtils import query_validated_user
 
 
 @bluePrint.route('/util/coverpic', methods=['POST'])

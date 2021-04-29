@@ -1,4 +1,4 @@
-from app.models import User, Course, CourseCredit, ParentHood, Student
+from app.models import User, Course, CourseCredit, ParentHood, Student, TakingClass
 from app.utils.utils import Roles
 
 
@@ -75,3 +75,12 @@ def query_parent_hood(parent_id, student_id):
     parent_hood = ParentHood.query.filter(ParentHood.deleted == False)\
         .filter(ParentHood.parent_id == parent_id, ParentHood.student_id == student_id).first()
     return parent_hood
+
+
+def query_existing_taking_class(class_session_id, student_id):
+    """
+    This functions retrieves the taking class record based on the class_session_id and student_id
+    """
+    taking_class = TakingClass.query.filter(TakingClass.deleted == False)\
+        .filter(TakingClass.session_id == class_session_id, TakingClass.student_id == student_id).first()
+    return taking_class

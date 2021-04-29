@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 7d0cb4cbf1a3
+Revision ID: 201fbe71ac53
 Revises: 
-Create Date: 2021-04-04 16:24:34.992925
+Create Date: 2021-04-26 22:31:08.775467
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '7d0cb4cbf1a3'
+revision = '201fbe71ac53'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,14 +22,6 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('deleted', sa.Boolean(), nullable=True),
     sa.Column('name', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('students',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('deleted', sa.Boolean(), nullable=True),
-    sa.Column('realName', sa.String(), nullable=True),
-    sa.Column('dob', sa.DateTime(), nullable=True),
-    sa.Column('gender', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('token_blacklist',
@@ -44,7 +36,6 @@ def upgrade():
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('deleted', sa.Boolean(), nullable=True),
-    sa.Column('validated', sa.Boolean(), nullable=True),
     sa.Column('realName', sa.String(), nullable=True),
     sa.Column('phone', sa.String(), nullable=True),
     sa.Column('email', sa.String(), nullable=True),
@@ -58,6 +49,7 @@ def upgrade():
     sa.Column('language', sa.String(), nullable=True),
     sa.Column('city', sa.String(), nullable=True),
     sa.Column('province', sa.String(), nullable=True),
+    sa.Column('validated', sa.Boolean(), nullable=True),
     sa.Column('approve_time', sa.DateTime(), nullable=True),
     sa.Column('approver', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['approver'], ['users.id'], ),
@@ -68,19 +60,10 @@ def upgrade():
     sa.Column('course_id', sa.Integer(), nullable=True),
     sa.Column('deleted', sa.Boolean(), nullable=True),
     sa.Column('startTime', sa.DateTime(), nullable=True),
-    sa.Column('endTime', sa.DateTime(), nullable=True),
+    sa.Column('duration', sa.Integer(), nullable=True),
     sa.Column('info', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['course_id'], ['courses.id'], ),
     sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('courseCredits',
-    sa.Column('student_id', sa.Integer(), nullable=False),
-    sa.Column('course_id', sa.Integer(), nullable=False),
-    sa.Column('deleted', sa.Boolean(), nullable=True),
-    sa.Column('credit', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['course_id'], ['courses.id'], ),
-    sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
-    sa.PrimaryKeyConstraint('student_id', 'course_id')
     )
     op.create_table('modificationLog',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -94,11 +77,30 @@ def upgrade():
     sa.ForeignKeyConstraint(['operator'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('students',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('deleted', sa.Boolean(), nullable=True),
+    sa.Column('realName', sa.String(), nullable=True),
+    sa.Column('dob', sa.DateTime(), nullable=True),
+    sa.Column('gender', sa.Boolean(), nullable=True),
+    sa.Column('creator_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['creator_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('courseCredits',
+    sa.Column('student_id', sa.Integer(), nullable=False),
+    sa.Column('course_id', sa.Integer(), nullable=False),
+    sa.Column('deleted', sa.Boolean(), nullable=True),
+    sa.Column('credit', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['course_id'], ['courses.id'], ),
+    sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
+    sa.PrimaryKeyConstraint('student_id', 'course_id')
+    )
     op.create_table('parenthoods',
     sa.Column('student_id', sa.Integer(), nullable=False),
     sa.Column('parent_id', sa.Integer(), nullable=False),
     sa.Column('deleted', sa.Boolean(), nullable=True),
-    sa.Column('comments', sa.String(), nullable=True),
+    sa.Column('relation', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['parent_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
     sa.PrimaryKeyConstraint('student_id', 'parent_id')
@@ -129,11 +131,11 @@ def downgrade():
     op.drop_table('teachings')
     op.drop_table('takingClasses')
     op.drop_table('parenthoods')
-    op.drop_table('modificationLog')
     op.drop_table('courseCredits')
+    op.drop_table('students')
+    op.drop_table('modificationLog')
     op.drop_table('classSessions')
     op.drop_table('users')
     op.drop_table('token_blacklist')
-    op.drop_table('students')
     op.drop_table('courses')
     # ### end Alembic commands ###
