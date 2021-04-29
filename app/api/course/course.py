@@ -1,12 +1,14 @@
 from flask import jsonify, request
 from dateutil.rrule import *
 from app import db
-from app.models import Course, ClassSession
+from app.models import Course, ClassSession, Teaching, TakingClass
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_course, query_course_credit
+from app.dbUtils.dbUtils import query_existing_course, query_course_credit, query_existing_taking_class
 from app.utils.utils import datetime_string_to_utc, Roles, \
     datetime_string_to_datetime, convert_to_UTC,dt_list_to_UTC_list
+from flask_jwt_extended import get_jwt_identity
+
 
 
 # -------------------Courses Section--------------------------------------------------------
@@ -35,43 +37,57 @@ def add_class_session():
     This api adds one class session or recurring class sessions to the DB.
     This api will take into account whether the event is a recurring one.
     The repeat wkdays from request need to be in 0, 1, 2, ... 6 for Mon, Tue, Wed, ... Sun
+    This api will also add associated teaching information into DB.
     """
     course_id = request.json.get('course_id', None)
     # start_time and end_time needs to be in original timezone to preserve information
-    start_time = datetime_string_to_datetime(request.json.get('start_time', None))
-    end_time = datetime_string_to_datetime(request.json.get('end_time', None))
+    start_time_local = datetime_string_to_datetime(request.json.get('start_time', None))
+    duration = request.json.get('duration', None)  # duration is in minutes
     info = request.json.get('info', None)
     course = query_existing_course(course_id)
+    teacher_id = get_jwt_identity().get('id')
     repeat_weekly = request.json.get('repeat_weekly', None)
+
+    if duration <= 0:
+        return jsonify(message="Duration must be greater than 0"), 400
 
     if course:
         if repeat_weekly:
             repeat_wkdays = request.json.get('repeat_wkdays', None)  # weekdays are in: MO, TU, WE, TH, FR, SA, SU
             repeat_until = datetime_string_to_datetime(request.json.get('repeat_until', None))
-            start_time_list = list(rrule(WEEKLY, interval=1, until=repeat_until, 
-                wkst=MO, byweekday=repeat_wkdays, dtstart=start_time))
-            end_time_list = list(rrule(WEEKLY, interval=1, until=repeat_until, 
-                wkst=MO, byweekday=repeat_wkdays, dtstart=end_time))
-            start_time_utc_list = dt_list_to_UTC_list(start_time_list)
-            end_time_utc_list = dt_list_to_UTC_list(end_time_list)
-            for s_time, e_time in zip(start_time_utc_list, end_time_utc_list):
+            start_time_local_list = list(rrule(WEEKLY, interval=1, until=repeat_until, 
+                wkst=MO, byweekday=repeat_wkdays, dtstart=start_time_local))
+            start_time_utc_list = dt_list_to_UTC_list(start_time_local_list)
+            for start_time_utc in start_time_utc_list:
                 class_session = ClassSession()
                 class_session.course = course
-                class_session.startTime = s_time
-                class_session.endTime = e_time
+                class_session.startTime = start_time_utc
+                class_session.duration = duration
                 class_session.info = info
+                
+                # Add teacher information to the class_session
+                teaching = Teaching()
+                teaching.class_session = class_session
+                teaching.teacher_id = teacher_id
 
                 db.session.add(class_session)
+                db.session.add(teaching)
                 db.session.commit()
             return jsonify(message="Recurring class sessions added successfully"), 201
         else:
             class_session = ClassSession()
             class_session.course = course
-            class_session.startTime = convert_to_UTC(start_time)
-            class_session.endTime = convert_to_UTC(end_time)
+            class_session.startTime = convert_to_UTC(start_time_local)
+            class_session.duration = duration
             class_session.info = info
 
+            # Add teacher information to the class_session
+            teaching = Teaching()
+            teaching.class_session = class_session
+            teaching.teacher_id = teacher_id
+
             db.session.add(class_session)
+            db.session.add(teaching)
             db.session.commit()
             return jsonify(message="Class session added successfully"), 201
     else:
@@ -79,7 +95,7 @@ def add_class_session():
 
 
 @bluePrint.route('/course_credit', methods=['PUT'])
-@jwt_roles_required(Roles.PRINCIPLE)  # Only teacher and above can add a course
+@jwt_roles_required(Roles.PRINCIPLE)  # Only principle and above can add a course
 def update_course_credit():
     """
     This api updates the course credit of a student in the DB.
@@ -99,6 +115,29 @@ def update_course_credit():
         return jsonify(message="Course credit does not exist"), 400
 
 
+@bluePrint.route('/taking_class', methods=['POST'])
+@jwt_roles_required(Roles.TEACHER)  # Only teacher and above can add a course
+def add_taking_class_session():
+    """
+    This api add students who are taking a class session into the DB.
+    """
+    class_session_id = request.json.get('class_session_id', None)
+    student_ids = request.json.get('student_ids', None)
+    comments = request.json.get('comments', None)
+
+    for student_id in student_ids:
+        taking_class = query_existing_taking_class(class_session_id, student_id)
+        if taking_class:
+            taking_class.comments = comments
+        else:
+            taking_class = TakingClass()
+            taking_class.session_id = class_session_id
+            taking_class.student_id = student_id
+            taking_class.comments = comments
+
+        db.session.add(taking_class)
+        db.session.commit()
+    return jsonify(message="Taking class information added"), 201
 # @bluePrint.route('/student_course_credits', methods=['GET'])
 # @jwt_roles_required(Roles.TEACHER)  # Only teacher and above can add a course
 # def get_student_course_credits():

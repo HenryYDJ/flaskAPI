@@ -1,14 +1,1 @@
 Generic single-database configuration.
-
-Use the following commands in the terminal
-- To create the migration repository:
-flask db init
-
-- To generate the migration script
-flask db migrate -m "migration description message"
-
-- To upgrade to the latest migration
-flask db upgrade
-
-- To downgrade to the previous migration
-flask db downgrade

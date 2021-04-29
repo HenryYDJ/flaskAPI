@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, INTEGER, String, BOOLEAN, ForeignKey, DATETIME, BLOB
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, ma
 
@@ -7,12 +7,13 @@ from app import db, ma
 class Student(db.Model):
     __tablename__ = 'students'
 
-    id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean, default=False)
+    id = Column(INTEGER, primary_key=True)
+    deleted = Column(BOOLEAN, default=False)
     realName = Column(String)
-    dob = Column(DateTime)  # Date of birth
-    gender = Column(Boolean)  # 0 for girl and 1 for boy
-    creator_id = Column(Integer, ForeignKey('users.id'))
+    dob = Column(DATETIME)  # Date of birth
+    gender = Column(BOOLEAN)  # 0 for girl and 1 for boy
+    creator_id = Column(INTEGER, ForeignKey('users.id'))
+    qr_code = Column(BLOB)
 
     # Relationship for user who created this student
     creator = db.relationship("User", backref="created_students")
@@ -30,25 +31,25 @@ class Student(db.Model):
 class User(db.Model):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean, default=False)  # Field to mark whether the account is deleted.
+    id = Column(INTEGER, primary_key=True)
+    deleted = Column(BOOLEAN, default=False)  # Field to mark whether the account is deleted.
     realName = Column(String)  # Real name of the account owner
     phone = Column(String)  # Phone number of the account owner
     email = Column(String)  # Email of the account owner
     pwhash = Column(String)  # Hashed password field.
-    register_time = Column(DateTime)  # Server date and time when registration was submitted. (All datetime are in
+    register_time = Column(DATETIME)  # Server date and time when registration was submitted. (All datetime are in
     # UTC time)
-    roles = Column(Integer, default=0)
+    roles = Column(INTEGER, default=0)
     avatar = Column(String)  # The avatar url of the user, updates everytime the user signs in.
     openID = Column(String)  # wechat openID of the user
     sessionKey = Column(String)  # wechat session Key of the user
-    gender = Column(Boolean)
+    gender = Column(BOOLEAN)
     language = Column(String)
     city = Column(String)
     province = Column(String)
-    validated = Column(Boolean, default=False)  # Field to mark whether the user's account is validated by the admin.
-    approve_time = Column(DateTime)  # Server date and time when the use is approved.
-    approver = Column(Integer, ForeignKey('users.id'), default=None)  # Approved by whom
+    validated = Column(BOOLEAN, default=False)  # Field to mark whether the user's account is validated by the admin.
+    approve_time = Column(DATETIME)  # Server date and time when the use is approved.
+    approver = Column(INTEGER, ForeignKey('users.id'), default=None)  # Approved by whom
 
     def set_pwhash(self, password):
         """
@@ -74,8 +75,8 @@ class User(db.Model):
 class Course(db.Model):
     __tablename__ = "courses"
 
-    id = Column(Integer, primary_key=True)
-    deleted = Column(Boolean, default=False)
+    id = Column(INTEGER, primary_key=True)
+    deleted = Column(BOOLEAN, default=False)
     name = Column(String)
 
     def __repr__(self):
@@ -85,10 +86,10 @@ class Course(db.Model):
 class CourseCredit(db.Model):
     __tablename__ = "courseCredits"
 
-    student_id = Column(Integer, ForeignKey('students.id'), primary_key=True)
-    course_id = Column(Integer, ForeignKey('courses.id'), primary_key=True)
-    deleted = Column(Boolean, default=False)
-    credit = Column(Integer)
+    student_id = Column(INTEGER, ForeignKey('students.id'), primary_key=True)
+    course_id = Column(INTEGER, ForeignKey('courses.id'), primary_key=True)
+    deleted = Column(BOOLEAN, default=False)
+    credit = Column(INTEGER)
 
     # Relationships
     student = db.relationship("Student", backref="student_credits")
@@ -98,11 +99,11 @@ class CourseCredit(db.Model):
 class ClassSession(db.Model):
     __tablename__ = "classSessions"
 
-    id = Column(Integer, primary_key=True)
-    course_id = Column(Integer, ForeignKey("courses.id"))
-    deleted = Column(Boolean, default=False)
-    startTime = Column(DateTime)  # UTC time of the session start time
-    endTime = Column(DateTime)  # UTC time of the session end time
+    id = Column(INTEGER, primary_key=True)
+    course_id = Column(INTEGER, ForeignKey("courses.id"))
+    deleted = Column(BOOLEAN, default=False)
+    startTime = Column(DATETIME)  # UTC time of the session start time
+    duration = Column(INTEGER)  # Duration of the event, in minutes
 
     info = Column(String)
 
@@ -113,10 +114,10 @@ class ClassSession(db.Model):
 class ParentHood(db.Model):
     __tablename__ = "parenthoods"
 
-    student_id = Column(Integer, ForeignKey("students.id"), primary_key=True)
-    parent_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
-    deleted = Column(Boolean, default=False)
-    relation = Column(Integer)
+    student_id = Column(INTEGER, ForeignKey("students.id"), primary_key=True)
+    parent_id = Column(INTEGER, ForeignKey("users.id"), primary_key=True)
+    deleted = Column(BOOLEAN, default=False)
+    relation = Column(INTEGER)
 
     # Relationships
     student = db.relationship("Student", backref="parents")
@@ -126,9 +127,9 @@ class ParentHood(db.Model):
 class Teaching(db.Model):
     __tablename__ = "teachings"
 
-    session_id = Column(Integer, ForeignKey("classSessions.id"), primary_key=True)
-    teacher_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
-    deleted = Column(Boolean, default=False)
+    session_id = Column(INTEGER, ForeignKey("classSessions.id"), primary_key=True)
+    teacher_id = Column(INTEGER, ForeignKey("users.id"), primary_key=True)
+    deleted = Column(BOOLEAN, default=False)
     comments = Column(String)
 
     # Relationships
@@ -139,9 +140,9 @@ class Teaching(db.Model):
 class TakingClass(db.Model):
     __tablename__ = "takingClasses"
 
-    session_id = Column(Integer, ForeignKey("classSessions.id"), primary_key=True)
-    student_id = Column(Integer, ForeignKey("students.id"), primary_key=True)
-    deleted = Column(Boolean, default=False)
+    session_id = Column(INTEGER, ForeignKey("classSessions.id"), primary_key=True)
+    student_id = Column(INTEGER, ForeignKey("students.id"), primary_key=True)
+    deleted = Column(BOOLEAN, default=False)
     comments = Column(String)
 
     # Relationships
@@ -153,12 +154,12 @@ class TokenBlacklist(db.Model):
     """
     Model for black listed JWT tokens.
     """
-    id = Column(Integer, primary_key=True)
+    id = Column(INTEGER, primary_key=True)
     jti = Column(String(36), nullable=False)
     token_type = Column(String(10), nullable=False)
     user_id = Column(String(50), nullable=False)
-    revoked = Column(Boolean, nullable=False)
-    expires = Column(DateTime, nullable=False)
+    revoked = Column(BOOLEAN, nullable=False)
+    expires = Column(DATETIME, nullable=False)
 
     def to_dict(self):
         return {
@@ -178,11 +179,11 @@ class ModificationLog(db.Model):
     """
     __tablename__ = "modificationLog"
 
-    id = Column(Integer, primary_key=True)
-    operator = Column(Integer, ForeignKey("users.id"))
-    modification_time = Column(DateTime)
+    id = Column(INTEGER, primary_key=True)
+    operator = Column(INTEGER, ForeignKey("users.id"))
+    modification_time = Column(DATETIME)
     table = Column(String)
-    entry = Column(Integer)
+    entry = Column(INTEGER)
     column = Column(String)
     original = Column(String)
     new = Column(String)
