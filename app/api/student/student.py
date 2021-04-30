@@ -5,7 +5,7 @@ from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from datetime import datetime
 from flask_jwt_extended import get_jwt_identity
-from app.utils.utils import datetime_string_to_utc, Roles, Relationship
+from app.utils.utils import Roles, Relationship, datetime_string_to_naive
 from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_existing_student,\
     query_all_existing_students
 
@@ -22,8 +22,8 @@ def add_student():
     gender = request.json.get('gender', None)
     creator_id = get_jwt_identity().get('id')
 
-    # Convert DOB to UTC format to store in DB
-    dob_utc = datetime_string_to_utc(dob)
+    # Convert DOB to naive datetime format to store in DB
+    dob_naive = datetime_string_to_naive(dob)
     student = Student()
     # Query the db to find the User who created this student.
     creator = query_validated_user(creator_id)
@@ -33,7 +33,7 @@ def add_student():
     else:
         return jsonify(message="Wrong input"), 400
     student.realName = realName
-    student.dob = dob_utc
+    student.dob = dob_naive
     student.gender = gender
 
     db.session.add(student)
@@ -74,7 +74,7 @@ def get_students():
     """
     students = query_all_existing_students()
     if students:
-        return jsonify(message=[student.to_dict() for student in students])
+        return jsonify(message=[student.to_dict() for student in students]), 201
     else:
         return jsonify(message="No students found"), 404
 

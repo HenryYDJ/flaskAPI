@@ -67,6 +67,13 @@ class User(db.Model):
         return {
             'id': self.id
         }
+    
+    def validate_info(self):
+        return {
+            'phone': self.phone,
+            'real_name': self.realName,
+            'role': self.roles
+        }
 
     def get_roles(self):
         return self.roles

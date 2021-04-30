@@ -21,6 +21,14 @@ def query_validated_user(user_id):
         return None
 
 
+def query_unvalidated_users():
+    """
+    This function retrieves all existing but unvalidated users.
+    """
+    users = User.query.filter(User.deleted == False).filter(User.validated == False).all()
+    return users
+
+
 def query_existing_student(student_id):
     """
     This function returns an existing student based on the student_id

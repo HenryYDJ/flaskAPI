@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from dateutil.rrule import *
 from app import db
-from app.models import Course, ClassSession, Teaching, TakingClass
+from app.models import Course, ClassSession, Teaching, TakingClass, CourseCredit
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_course, query_course_credit, query_existing_taking_class
@@ -95,10 +95,11 @@ def add_class_session():
 
 
 @bluePrint.route('/course_credit', methods=['PUT'])
-@jwt_roles_required(Roles.PRINCIPLE)  # Only principle and above can add a course
+@jwt_roles_required(Roles.PRINCIPLE)  # Only principle and above can adjust a course credit info
 def update_course_credit():
     """
     This api updates the course credit of a student in the DB.
+    If no previous course credit was in the DB, then a new record is created and stored.
     """
     course_id = request.json.get('course_id', None)
     student_id = request.json.get('student_id', None)
@@ -112,7 +113,13 @@ def update_course_credit():
         db.session.commit()
         return jsonify(message="Course credit updated"), 201
     else:
-        return jsonify(message="Course credit does not exist"), 400
+        course_credit = CourseCredit()
+        course_credit.course_id = course_id
+        course_credit.student_id = student_id
+        course_credit.credit = credit
+        db.session.add(course_credit)
+        db.session.commit()
+        return jsonify(message="Course credit added"), 201
 
 
 @bluePrint.route('/taking_class', methods=['POST'])
