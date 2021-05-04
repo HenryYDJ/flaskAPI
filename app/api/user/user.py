@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from app import db
-from app.models import User, user_schema, users_schema
+from app.models import User
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_phone_user,\

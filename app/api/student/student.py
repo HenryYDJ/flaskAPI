@@ -24,6 +24,8 @@ def add_student():
 
     # Convert DOB to naive datetime format to store in DB
     dob_naive = datetime_string_to_naive(dob)
+    
+    # Create student instance, fill in the values and add to DB
     student = Student()
     # Query the db to find the User who created this student.
     creator = query_validated_user(creator_id)
@@ -35,6 +37,7 @@ def add_student():
     student.realName = realName
     student.dob = dob_naive
     student.gender = gender
+    student.create_time = datetime.utcnow()
 
     db.session.add(student)
     db.session.commit()
