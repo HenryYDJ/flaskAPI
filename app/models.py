@@ -69,6 +69,10 @@ class User(db.Model):
         }
     
     def validate_info(self):
+        """
+        This function returns the user's phone, realName, Role in a dict.
+        This function is to help admins to approve an unapproved user.
+        """
         return {
             'phone': self.phone,
             'real_name': self.realName,
@@ -76,7 +80,14 @@ class User(db.Model):
         }
 
     def get_roles(self):
-        return self.roles
+        """
+        This function returns the user's role and validation status in a dict.
+        This function is for the frontend client to get the user's role and display contents accordingly.
+        """
+        return {
+            'role': self.roles,
+            'validated': self.validated
+        }
 
 
 class Course(db.Model):
