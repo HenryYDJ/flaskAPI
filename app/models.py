@@ -79,6 +79,13 @@ class User(db.Model):
             'role': self.roles
         }
 
+    def get_role_value(self):
+        """
+        This function returns the role value of the user.
+        The role value is used in the auth_utils to verify the user's role requirement.
+        """
+        return self.roles
+
     def get_roles(self):
         """
         This function returns the user's role and validation status in a dict.

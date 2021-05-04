@@ -117,7 +117,7 @@ def jwt_roles_required(roles):
 
             # Check if the user is qualified for the action or resources
             if user:
-                user_roles = user.get_roles()
+                user_roles = user.get_role_value()
                 if user_roles >= required_roles:
                     # If the user's role in DB is >= required roles, meaning the user has equal or above
                     # qualification for the API
