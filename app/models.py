@@ -13,6 +13,7 @@ class Student(db.Model):
     dob = Column(DATETIME)  # Date of birth
     gender = Column(BOOLEAN)  # 0 for girl and 1 for boy
     creator_id = Column(INTEGER, ForeignKey('users.id'))
+    create_time = Column(DATETIME)  # The date and time when the student is created
     qr_code = Column(BLOB)
 
     # Relationship for user who created this student
@@ -129,8 +130,10 @@ class ClassSession(db.Model):
     deleted = Column(BOOLEAN, default=False)
     startTime = Column(DATETIME)  # UTC time of the session start time
     duration = Column(INTEGER)  # Duration of the event, in minutes
-
     info = Column(String)
+    attendance_call = Column(BOOLEAN, default=False)  # Whether the teacher has taken the attendance
+    attendance_teacher = Column(INTEGER, ForeignKey("users.id"))  # The teacher who took the attendance call
+    attendance_time = Column(DATETIME)  # UTC time of the attendance call
 
     # Relationships
     course = db.relationship("Course", backref="course_sessions")
@@ -167,6 +170,7 @@ class TakingClass(db.Model):
 
     session_id = Column(INTEGER, ForeignKey("classSessions.id"), primary_key=True)
     student_id = Column(INTEGER, ForeignKey("students.id"), primary_key=True)
+    attended = Column(BOOLEAN, default=False)
     deleted = Column(BOOLEAN, default=False)
     comments = Column(String)
 
@@ -223,74 +227,74 @@ class ModificationLog(db.Model):
 
 
 # --------------------------Marshmallow Schema----------------------------------------
-class StudentSchema(ma.Schema):
-    class Meta:
-        fields = ["name"]
+# class StudentSchema(ma.Schema):
+#     class Meta:
+#         fields = ["name"]
 
 
-class TeacherSchema(ma.Schema):
-    class Meta:
-        fields = ["name"]
+# class TeacherSchema(ma.Schema):
+#     class Meta:
+#         fields = ["name"]
 
 
-class UserSchema(ma.Schema):
-    class Meta:
-        fields = ["name"]
+# class UserSchema(ma.Schema):
+#     class Meta:
+#         fields = ["name"]
 
 
-class CourseSchema(ma.Schema):
-    class Meta:
-        fields = ["name"]
+# class CourseSchema(ma.Schema):
+#     class Meta:
+#         fields = ["name"]
 
 
-class CourseCreditSchema(ma.Schema):
-    class Meta:
-        fields = ["student_id", "course_id", "credit"]
+# class CourseCreditSchema(ma.Schema):
+#     class Meta:
+#         fields = ["student_id", "course_id", "credit"]
 
 
-class TeachingSchema(ma.Schema):
-    class Meta:
-        fields = ["comments"]
+# class TeachingSchema(ma.Schema):
+#     class Meta:
+#         fields = ["comments"]
 
 
-class TakingClassSchema(ma.Schema):
-    class Meta:
-        fields = ["comments"]
+# class TakingClassSchema(ma.Schema):
+#     class Meta:
+#         fields = ["comments"]
 
 
-class ClassSessionSchema(ma.Schema):
-    class Meta:
-        fields = ["info"]
+# class ClassSessionSchema(ma.Schema):
+#     class Meta:
+#         fields = ["info"]
 
 
-class ParentHoodSchema(ma.Schema):
-    class Meta:
-        fields = ["comments"]
+# class ParentHoodSchema(ma.Schema):
+#     class Meta:
+#         fields = ["comments"]
 
 
-student_schema = StudentSchema()
-students_schema = StudentSchema(many=True)
+# student_schema = StudentSchema()
+# students_schema = StudentSchema(many=True)
 
-teacher_schema = TeacherSchema()
-teachers_schema = TeacherSchema(many=True)
+# teacher_schema = TeacherSchema()
+# teachers_schema = TeacherSchema(many=True)
 
-course_schema = CourseSchema()
-courses_schema = CourseSchema(many=True)
+# course_schema = CourseSchema()
+# courses_schema = CourseSchema(many=True)
 
-user_schema = UserSchema()
-users_schema = UserSchema(many=True)
+# user_schema = UserSchema()
+# users_schema = UserSchema(many=True)
 
-course_credit_schema = CourseCreditSchema()
-course_credits_schema = CourseCreditSchema(many=True)
+# course_credit_schema = CourseCreditSchema()
+# course_credits_schema = CourseCreditSchema(many=True)
 
-parent_hood_schema = ParentHoodSchema()
-parent_hoods_schema = ParentHoodSchema(many=True)
+# parent_hood_schema = ParentHoodSchema()
+# parent_hoods_schema = ParentHoodSchema(many=True)
 
-class_session_schema = ClassSessionSchema()
-class_sessions_schema = ClassSessionSchema(many=True)
+# class_session_schema = ClassSessionSchema()
+# class_sessions_schema = ClassSessionSchema(many=True)
 
-teaching_schema = TeachingSchema()
-teachings_schema = TeachingSchema(many=True)
+# teaching_schema = TeachingSchema()
+# teachings_schema = TeachingSchema(many=True)
 
-taking_class_schema = TakingClassSchema()
-taking_classes_schema = TakingClassSchema(many=True)
+# taking_class_schema = TakingClassSchema()
+# taking_classes_schema = TakingClassSchema(many=True)

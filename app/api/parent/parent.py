@@ -5,10 +5,9 @@ from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity
 
 from app import db
-from app.models import User
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_teacher, query_validated_user, query_existing_phone_user, query_existing_user
+from app.dbUtils.dbUtils import query_existing_user
 from app.utils.utils import Roles
 
 
