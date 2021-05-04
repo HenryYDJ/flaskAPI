@@ -8,7 +8,7 @@ def datetime_string_to_utc(datetime_string):
     """
     tz_utc = pytz.utc
     try:
-        dt = datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S.%f%z')
+        dt = datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S%z')
     except ValueError:
         return None
     dt_utc = dt.astimezone(tz_utc)
@@ -21,7 +21,7 @@ def datetime_string_to_naive(datetime_string):
     Main usage is for date of birth and other places where timezon is not required.
     """
     try:
-        dt = datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S.%f')
+        dt = datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S')
         return dt
     except ValueError:
         return None
@@ -33,7 +33,7 @@ def datetime_string_to_datetime(datetime_string):
     preserving the original timezone.
     """
     try:
-        dt = datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S.%f%z')
+        dt = datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S%z')
         return dt
     except ValueError:
         return None
