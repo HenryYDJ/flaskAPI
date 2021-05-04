@@ -1,11 +1,12 @@
 from datetime import datetime
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from app import db
 from app.models import User, user_schema, users_schema
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_phone_user, query_validated_user, query_existing_user, \
+from app.dbUtils.dbUtils import query_existing_phone_user,\
+    query_validated_user, query_existing_user,\
     query_unvalidated_users
 from app.utils.utils import Roles
 
@@ -81,6 +82,21 @@ def get_unvalidated_users():
         return jsonify(message=[user.validate_info() for user in users]), 201
     else:
         return jsonify(message="No unvalidated users"), 400
+
+
+@bluePrint.route('/wechat_user_role', methods=['GET'])
+@jwt_required()
+def get_user_role():
+    """
+    This API returns the user's role and validation status.
+    """
+    user_id = get_jwt_identity().get('id')
+    user = query_existing_user(user_id)
+
+    if user:
+        return jsonify(message=user.get_roles()), 201
+    else:
+        return jsonify(message="No such user."), 400
 # @bluePrint.route('/user', methods=['GET'])
 # def get_user():
 #     """
