@@ -126,6 +126,7 @@ class ClassSession(db.Model):
     __tablename__ = "classSessions"
 
     id = Column(INTEGER, primary_key=True)
+    series_id = Column(String, default=None)  # If the class session is in a series, then here is the UUID for the series
     course_id = Column(INTEGER, ForeignKey("courses.id"))
     deleted = Column(BOOLEAN, default=False)
     startTime = Column(DATETIME)  # UTC time of the session start time
@@ -159,6 +160,7 @@ class Teaching(db.Model):
     teacher_id = Column(INTEGER, ForeignKey("users.id"), primary_key=True)
     deleted = Column(BOOLEAN, default=False)
     comments = Column(String)
+    attended = Column(BOOLEAN, default=False)  # Whether the teacher attended the session
 
     # Relationships
     class_session = db.relationship("ClassSession", backref="session_teachings")
@@ -170,7 +172,7 @@ class TakingClass(db.Model):
 
     session_id = Column(INTEGER, ForeignKey("classSessions.id"), primary_key=True)
     student_id = Column(INTEGER, ForeignKey("students.id"), primary_key=True)
-    attended = Column(BOOLEAN, default=False)
+    attended = Column(BOOLEAN, default=False)  # Whether the student attended the session
     deleted = Column(BOOLEAN, default=False)
     comments = Column(String)
 
