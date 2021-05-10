@@ -1,5 +1,7 @@
 from flask import jsonify, request
 from dateutil.rrule import *
+from uuid import uuid4
+from datetime import timedelta
 from app import db
 from app.models import Course, ClassSession, Teaching, TakingClass, CourseCredit
 from app.api import bluePrint
@@ -8,7 +10,6 @@ from app.dbUtils.dbUtils import query_existing_course, query_course_credit, quer
 from app.utils.utils import datetime_string_to_utc, Roles, \
     datetime_string_to_datetime, convert_to_UTC,dt_list_to_UTC_list
 from flask_jwt_extended import get_jwt_identity
-
 
 
 # -------------------Courses Section--------------------------------------------------------
@@ -39,11 +40,14 @@ def add_class_session():
     The repeat wkdays from request need to be in 0, 1, 2, ... 6 for Mon, Tue, Wed, ... Sun
     This api will also add associated teaching information into DB.
     """
+    one_year = timedelta(days = 365)
     course_id = request.json.get('course_id', None)
     # start_time and end_time needs to be in original timezone to preserve information
     start_time_local = datetime_string_to_datetime(request.json.get('start_time', None))
+    end_time_local = datetime_string_to_datetime(request.json.get('end_time', None))
     duration = request.json.get('duration', None)  # duration is in minutes
     info = request.json.get('info', None)
+    student_ids = request.json.get('student_ids', None)
     course = query_existing_course(course_id)
     teacher_id = get_jwt_identity().get('id')
     repeat_weekly = request.json.get('repeat_weekly', None)
@@ -51,29 +55,44 @@ def add_class_session():
     if duration <= 0:
         return jsonify(message="Duration must be greater than 0"), 400
 
+    if end_time_local < start_time_local:
+        return jsonify(message="End time must be after start time"), 400
+
     if course:
         if repeat_weekly:
-            repeat_wkdays = request.json.get('repeat_wkdays', None)  # weekdays are in: MO, TU, WE, TH, FR, SA, SU
-            repeat_until = datetime_string_to_datetime(request.json.get('repeat_until', None))
-            start_time_local_list = list(rrule(WEEKLY, interval=1, until=repeat_until, 
-                wkst=MO, byweekday=repeat_wkdays, dtstart=start_time_local))
-            start_time_utc_list = dt_list_to_UTC_list(start_time_local_list)
-            for start_time_utc in start_time_utc_list:
-                class_session = ClassSession()
-                class_session.course = course
-                class_session.startTime = start_time_utc
-                class_session.duration = duration
-                class_session.info = info
-                
-                # Add teacher information to the class_session
-                teaching = Teaching()
-                teaching.class_session = class_session
-                teaching.teacher_id = teacher_id
+            if end_time_local - start_time_local > one_year:
+                return jsonify(message="Can not add more than one years sessions"), 400
+            else:
+                series_id = str(uuid4())
+                repeat_wkdays = request.json.get('repeat_wkdays', None)  # weekdays are in: MO, TU, WE, TH, FR, SA, SU
+                start_time_local_list = list(rrule(WEEKLY, interval=1, until=end_time_local, 
+                    wkst=MO, byweekday=repeat_wkdays, dtstart=start_time_local))
+                start_time_utc_list = dt_list_to_UTC_list(start_time_local_list)
+                for start_time_utc in start_time_utc_list:
+                    class_session = ClassSession()
+                    class_session.course = course
+                    class_session.series_id = series_id
+                    class_session.startTime = start_time_utc
+                    class_session.duration = duration
+                    class_session.info = info
+                    
+                    # Add teacher information to the class_session
+                    teaching = Teaching()
+                    teaching.class_session = class_session
+                    teaching.teacher_id = teacher_id
+                    
+                    # Add taking class info to the DB
+                    if student_ids:
+                        for student_id in student_ids:
+                            taking_class = TakingClass()
+                            taking_class.class_session = class_session
+                            taking_class.student_id = student_id
+                            db.session.add(taking_class)
 
-                db.session.add(class_session)
-                db.session.add(teaching)
-                db.session.commit()
-            return jsonify(message="Recurring class sessions added successfully"), 201
+                    db.session.add(class_session)
+                    db.session.add(teaching)
+                    db.session.commit()
+                return jsonify(message="Recurring class sessions added successfully"), 201
         else:
             class_session = ClassSession()
             class_session.course = course
