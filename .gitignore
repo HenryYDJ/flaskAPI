@@ -141,5 +141,5 @@ dmypy.json
 .idea
 
 # SSL Certificate
-.pem
-.key
+novaqbit.com.pem
+novaqbit.com.key
