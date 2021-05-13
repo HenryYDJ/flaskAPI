@@ -138,12 +138,8 @@ dmypy.json
 .vscode
 
 # PyCharm
-<<<<<<< HEAD
-.idea
-=======
 .idea
 
 # SSL Certificate
 .pem
 .key
->>>>>>> 5ea832f2a9b023e8130918387f435ad810348299
