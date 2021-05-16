@@ -6,14 +6,13 @@ from app import db
 from app.models import Course, ClassSession, Teaching, TakingClass, CourseCredit
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_course, query_course_credit, query_existing_taking_class, \
-    query_existing_class_sessions
+from app.dbUtils.dbUtils import query_existing_class_session, query_existing_course, query_course_credit, query_existing_taking_class, \
+    query_existing_class_sessions, query_existing_courses_all
 from app.utils.utils import datetime_string_to_utc, Roles, \
     datetime_string_to_datetime, convert_to_UTC,dt_list_to_UTC_list
 from flask_jwt_extended import get_jwt_identity
 
 
-# -------------------Courses Section--------------------------------------------------------
 @bluePrint.route('/course', methods=['POST'])
 @jwt_roles_required(Roles.ADMIN)  # Only admin and above can add a course
 def add_course():
@@ -32,8 +31,20 @@ def add_course():
         return jsonify(message="Course created successfully"), 201
 
 
+@bluePrint.route('/courses', methods=['GET'])
+def get_courses():
+    """
+    This api gets all courses from the DB.
+    """
+    courses = query_existing_courses_all()
+    if courses:
+        return jsonify(message=[course.to_dict() for course in courses]), 201
+    else:
+        return jsonify(message="No courses found"), 404
+
+
 @bluePrint.route('/class_session', methods=['POST'])
-@jwt_roles_required(Roles.TEACHER)  # Only teacher and above can add a course
+@jwt_roles_required(Roles.TEACHER)  # Only teacher and above can add a class session
 def add_class_session():
     """
     This api adds one class session or recurring class sessions to the DB.
@@ -93,7 +104,8 @@ def add_class_session():
 
                     db.session.add(class_session)
                     db.session.add(teaching)
-                    db.session.commit()
+
+                db.session.commit()
                 return jsonify(message="Recurring class sessions added successfully"), 201
         else:
             class_session = ClassSession()
@@ -121,19 +133,18 @@ def get_class_sessions():
     """
     This API gets all the class sessions that the teacher is teaching within a time frame
     """
-
     # Get the start time and end time in UTC so we can query the DB easily.
     start_time_utc = datetime_string_to_utc(request.json.get('start_time', None))
     end_time_utc = datetime_string_to_utc(request.json.get('end_time', None))
     teacher_id = get_jwt_identity().get('id')
     
     class_sessions = query_existing_class_sessions(start_time_utc, end_time_utc, teacher_id)
-
+    # class_sessions = query_existing_class_sessions()
     return jsonify(message=[class_session.to_dict() for class_session in class_sessions]), 201
 
 
 @bluePrint.route('/course_credit', methods=['PUT'])
-@jwt_roles_required(Roles.PRINCIPLE)  # Only principle and above can adjust a course credit info
+@jwt_roles_required(Roles.ADMIN)  # Only admin can adjust a course credit info
 def update_course_credit():
     """
     This api updates the course credit of a student in the DB.
@@ -216,18 +227,6 @@ def add_taking_class_session():
 #         return jsonify(message="Course not found"), 404
 #
 #
-# @bluePrint.route('/courses', methods=['GET'])
-# def get_courses():
-#     """
-#     This api gets all courses from the DB.
-#     """
-#     courses = Course.query.filter_by(deleted=False).all()
-#     if courses:
-#         return jsonify(courses_schema.dump(courses))
-#     else:
-#         return jsonify(message="No courses found"), 404
-#
-#
 # @bluePrint.route('/course', methods=['PUT'])
 # def update_course():
 #     """
@@ -260,3 +259,23 @@ def add_taking_class_session():
 #         return jsonify(course_schema.dump(course))
 #     else:
 #         return jsonify(message="Course not found"), 404
+
+
+# @bluePrint.route('/class_session', methods=['PUT'])
+# @jwt_roles_required(Roles.TEACHER)  # Only teacher and above
+# def teacher_update_class_sessions():
+#     """
+#     This API lets a teacher to update his/her own class session information.
+#     This API updates one class session instead a series of sessions.
+#     """
+#     teacher_id = get_jwt_identity().get('id')
+#     session_id = request.json.get('session_id', None)
+
+#     start_time_local = datetime_string_to_datetime(request.json.get('start_time', None))
+#     end_time_local = datetime_string_to_datetime(request.json.get('end_time', None))
+#     duration = request.json.get('duration', None)  # duration is in minutes
+
+#     class_session = query_existing_class_session(session_id, teacher_id)
+#     if class_session:
+
+#     return jsonify(message=[class_session.to_dict() for class_session in class_sessions]), 201

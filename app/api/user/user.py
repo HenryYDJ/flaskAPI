@@ -5,7 +5,7 @@ from app import db
 from app.models import User
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_phone_user,\
+from app.dbUtils.dbUtils import query_existing_phone_user, query_existing_teacher,\
     query_validated_user, query_existing_user,\
     query_unvalidated_users
 from app.utils.utils import Roles
@@ -29,6 +29,21 @@ def add_user():
         db.session.add(user)
         db.session.commit()
         return jsonify(message="User created successfully"), 201
+
+
+@bluePrint.route('/user', methods=['GET'])
+@jwt_required()
+def get_user():
+    """
+    This api gets one user from the DB by the access token.
+    """
+    id = get_jwt_identity().get('id')
+    user = query_existing_user(id)
+    
+    if user:
+        return jsonify(message=user.full_info()), 201
+    else:
+        return jsonify(message="User not found"), 404
 
 
 @bluePrint.route('/user_role', methods=['POST'])
@@ -97,6 +112,8 @@ def get_user_role():
         return jsonify(message=user.get_roles()), 201
     else:
         return jsonify(message="No such user."), 400
+
+
 # @bluePrint.route('/user', methods=['GET'])
 # def get_user():
 #     """

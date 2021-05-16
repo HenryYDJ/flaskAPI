@@ -58,6 +58,14 @@ def query_existing_course(course_id):
     return course
 
 
+def query_existing_courses_all():
+    """
+    This function returns all the existing courses in the DB.
+    """
+    courses = Course.query.filter(Course.deleted == False).all()
+    return courses
+
+
 def query_existing_teacher(teacher_id):
     """
     This function retrieves one teacher based on the teacher_id.
@@ -106,4 +114,19 @@ def query_existing_class_sessions(start_time, end_time, teacher_id):
         .filter(ClassSession.startTime >= start_time, ClassSession.startTime <= end_time)\
         .filter(Teaching.teacher_id == teacher_id).all()
     
-    return sessions
+
+def query_existing_class_session(session_id, teacher_id):
+    """
+    This function selects one session based on the session_id and teacher_id.
+    """
+    sessions = ClassSession.query.join(Teaching)\
+        .filter(ClassSession.deleted == False)\
+        .filter(Teaching.deleted == False)\
+        .filter(ClassSession.id == Teaching.session_id)\
+        .filter(ClassSession.id == session_id)\
+        .filter(Teaching.teacher_id == teacher_id).first()
+# -----------------------------TEST-------------------------------
+
+# def query_existing_class_sessions():
+#     sessions = db.session.query(ClassSession).all()
+#     return sessions

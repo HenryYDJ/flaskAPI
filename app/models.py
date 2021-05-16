@@ -27,7 +27,8 @@ class Student(db.Model):
         return {
             "id": self.id,
             "real_name": self.realName,
-            "gender": self.gender
+            "gender": self.gender,
+            "dob": self.dob
         }
 
 class User(db.Model):
@@ -49,7 +50,8 @@ class User(db.Model):
     language = Column(String)
     city = Column(String)
     province = Column(String)
-    validated = Column(BOOLEAN, default=False)  # Field to mark whether the user's account is validated by the admin.
+    # Validation status: 0, not validated; 1, validated; 2, rejected
+    validated = Column(INTEGER, default=0)  # Field to mark whether the user's account is validated by the admin.
     approve_time = Column(DATETIME)  # Server date and time when the use is approved.
     approver = Column(INTEGER, ForeignKey('users.id'), default=None)  # Approved by whom
 
@@ -66,8 +68,30 @@ class User(db.Model):
         return check_password_hash(self.pwhash, password)
 
     def to_dict(self):
+        """
+        This information is used in the access token creation.
+        So, only id is returned.
+        """
         return {
             'id': self.id
+        }
+
+    def full_info(self):
+        """
+        This function returns the full info of the user.
+        """
+        return {
+            'id': self.id,
+            'realName': self.realName,
+            'phone': self.phone,
+            'email': self.email,
+            'roles': self.roles,
+            'avatar': self.avatar,
+            'gender': self.gender,
+            'language': self.language,
+            'city': self.city,
+            'provice': self.province,
+            'validated': self.validated
         }
     
     def validate_info(self):
@@ -108,6 +132,15 @@ class Course(db.Model):
 
     def __repr__(self):
         return "<Course(course name='%s')>" % self.name
+
+    def to_dict(self):
+        """
+        This functions returns information needed for a item in the course list
+        """
+        return {
+            "id": self.id,
+            "name": self.name
+        }
 
 
 class CourseCredit(db.Model):
