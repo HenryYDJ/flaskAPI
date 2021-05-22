@@ -137,13 +137,8 @@ def get_class_sessions():
     start_time_utc = datetime_string_to_utc(request.json.get('start_time', None))
     end_time_utc = datetime_string_to_utc(request.json.get('end_time', None))
     teacher_id = get_jwt_identity().get('id')
-    print(start_time_utc)
-    print(end_time_utc)
-    print(teacher_id)
     
     class_sessions = query_existing_class_sessions(start_time_utc, end_time_utc, teacher_id)
-    print(class_sessions)
-    # class_sessions = query_existing_class_sessions()
     return jsonify(message=[class_session.to_dict() for class_session in class_sessions]), 201
 
 

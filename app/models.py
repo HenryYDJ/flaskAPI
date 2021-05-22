@@ -181,7 +181,7 @@ class ClassSession(db.Model):
             'session_id': self.id,
             'series_id': self.series_id,
             'course_name': self.course.name,
-            'start_time_utc': self.startTime,
+            'start_time_utc': self.startTime.strftime('%Y-%m-%dT%H:%M:%S%z'),
             'duration': self.duration,
             'attendance_call': self.attendance_call
         }
