@@ -127,7 +127,7 @@ def add_class_session():
         return jsonify(message="Course does not exist"), 400
 
 
-@bluePrint.route('/class_sessions', methods=['GET'])
+@bluePrint.route('/class_sessions', methods=['POST'])
 @jwt_roles_required(Roles.TEACHER)  # Only teacher and above
 def get_class_sessions():
     """
