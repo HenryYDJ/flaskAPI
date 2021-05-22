@@ -24,12 +24,14 @@ class Student(db.Model):
         return "<Student(name='%s')>" % self.realName
 
     def to_dict(self):
-        return {
+        result = {
             "id": self.id,
             "real_name": self.realName,
-            "gender": self.gender,
-            "dob": self.dob.strftime('%Y-%m-%dT%H:%M:%S')
+            "gender": self.gender
         }
+        if self.dob:
+            result['dob'] = self.dob.strftime('%Y-%m-%dT%H:%M:%S')
+        return result
 
 class User(db.Model):
     __tablename__ = "users"

@@ -6,7 +6,7 @@ from app import db
 from app.models import Course, ClassSession, Teaching, TakingClass, CourseCredit
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_class_session, query_existing_course, query_course_credit, query_existing_taking_class, \
+from app.dbUtils.dbUtils import query_existing_course, query_course_credit, query_existing_taking_class, \
     query_existing_class_sessions, query_existing_courses_all
 from app.utils.utils import datetime_string_to_utc, Roles, \
     datetime_string_to_datetime, convert_to_UTC,dt_list_to_UTC_list
@@ -137,8 +137,12 @@ def get_class_sessions():
     start_time_utc = datetime_string_to_utc(request.json.get('start_time', None))
     end_time_utc = datetime_string_to_utc(request.json.get('end_time', None))
     teacher_id = get_jwt_identity().get('id')
+    print(start_time_utc)
+    print(end_time_utc)
+    print(teacher_id)
     
     class_sessions = query_existing_class_sessions(start_time_utc, end_time_utc, teacher_id)
+    print(class_sessions)
     # class_sessions = query_existing_class_sessions()
     return jsonify(message=[class_session.to_dict() for class_session in class_sessions]), 201
 
