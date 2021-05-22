@@ -28,7 +28,7 @@ class Student(db.Model):
             "id": self.id,
             "real_name": self.realName,
             "gender": self.gender,
-            "dob": self.dob
+            "dob": self.dob.strftime('%Y-%m-%dT%H:%M:%S')
         }
 
 class User(db.Model):

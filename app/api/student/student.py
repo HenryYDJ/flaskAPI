@@ -79,7 +79,7 @@ def get_students():
     if students:
         return jsonify(message=[student.to_dict() for student in students]), 201
     else:
-        return jsonify(message="No students found"), 404
+        return jsonify(message=[]), 201
 
 
 # @bluePrint.route('/student', methods=['GET'])
