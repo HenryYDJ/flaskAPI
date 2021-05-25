@@ -1,11 +1,9 @@
-from flask import Flask, jsonify, request
+from flask import Flask, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-import os
-
 from config import Config
 
 db = SQLAlchemy()
@@ -22,6 +20,9 @@ def create_app(config_class=Config):
     login.init_app(app)
     migrate.init_app(app=app, db=db)
     jwt.init_app(app)
+
+    app.config.WECHAT_ACCESS_TOKEN = ''
+    app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = None
 
     from app.api import bluePrint
     app.register_blueprint(bluePrint, url_prefix='/api/v1.0')

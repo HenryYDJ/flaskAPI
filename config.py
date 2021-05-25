@@ -15,3 +15,5 @@ class Config(object):
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=700)
     WECHAT_APPID = os.environ.get('WECHAT_APPID')
     WECHAT_APP_SECRET = os.environ.get('WECHAT_APP_SECRET')
+    REDIS_HOST = os.environ.get('REDIS_HOST') or 'localhost'
+    REDIS_PORT = os.environ.get('REDIS_PORT') or 6379

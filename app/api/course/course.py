@@ -141,6 +141,9 @@ def get_class_sessions():
     class_sessions = query_existing_class_sessions(start_time_utc, end_time_utc, teacher_id)
     return jsonify(message=[class_session.to_dict() for class_session in class_sessions]), 201
 
+    # TODO
+    # need to think about how to handle admin checking the class sessions
+
 
 @bluePrint.route('/course_credit', methods=['PUT'])
 @jwt_roles_required(Roles.ADMIN)  # Only admin can adjust a course credit info
