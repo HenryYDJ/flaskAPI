@@ -1,13 +1,16 @@
-from flask import jsonify, request
+from flask import jsonify, request, current_app
 from app import db
 from app.models import Student, ParentHood
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from datetime import datetime
+from datetime import date, datetime
 from flask_jwt_extended import get_jwt_identity
 from app.utils.utils import Roles, Relationship, datetime_string_to_naive
 from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_existing_student,\
     query_all_existing_students
+from app.utils.wechat_utils import request_wechat_access_token
+from datetime import datetime, timedelta
+from config import Config
 
 
 # --------------------------Student Section----------------------------------------------------------
@@ -82,20 +85,25 @@ def get_students():
         return jsonify(message=[]), 201
 
 
-# @bluePrint.route('/student', methods=['GET'])
-# def get_student():
-#     """
-#     This api gets one student from the DB by the student's id.
-#     """
-#     id = request.args.get('student_id', None)
-#
-#     student = Student.query.filter_by(id=id, deleted=False).first()
-#     if student:
-#         return jsonify(student_schema.dump(student))
-#     else:
-#         return jsonify(message="Student not found"), 404
-#
-#
+def get_access_token():
+    if len(current_app.config.WECHAT_ACCESS_TOKEN) and current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION:
+        if datetime.utcnow() < current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION:
+            return current_app.config.WECHAT_ACCESS_TOKEN
+    else:
+        r = request_wechat_access_token(Config.WECHAT_APPID, Config.WECHAT_APP_SECRET)
+        if r.access_token:
+            current_app.config.WECHAT_ACCESS_TOKEN = r.access_token
+            current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = datetime.utcnow() + timedelta(seconds=(r.expires_in - 60))
+            return current_app.config.WECHAT_ACCESS_TOKEN
+        else:
+            raise ValueError(r.errcode + " " + r.errmsg)
+
+
+
+
+
+
+
 # @bluePrint.route('/students', methods=['GET'])
 # def get_students():
 #     """
