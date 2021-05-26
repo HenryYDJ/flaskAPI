@@ -53,6 +53,14 @@ def query_existing_phone_user(phone_number):
     return user
 
 
+def query_existing_openid_user(openid):
+    """
+    This function retrieves one existing user based on the user's wechat openid.
+    """
+    user = User.query.filter(User.deleted == False).filter((User.openID == openid)).first()
+    return user
+
+
 def query_existing_course(course_id):
     course = Course.query.filter(Course.deleted == False).filter(Course.id == course_id).first()
     return course

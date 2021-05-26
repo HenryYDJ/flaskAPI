@@ -11,7 +11,8 @@ from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_e
 from app.utils.wechat_utils import request_wechat_access_token
 from datetime import datetime, timedelta
 from config import Config
-
+import requests
+import json
 
 # --------------------------Student Section----------------------------------------------------------
 @bluePrint.route('/student', methods=['POST'])
@@ -85,20 +86,90 @@ def get_students():
         return jsonify(message=[]), 201
 
 
+@bluePrint.route('/student_test', methods=['POST'])
+def student_test():
+    """
+    This api gets all undeleted students from the DB.
+    """
+    try:
+        a = get_access_token()
+        print(a)
+    except ValueError as e:
+        raise(e)
+    return jsonify(message='hi'), 201
+
+
 def get_access_token():
-    if len(current_app.config.WECHAT_ACCESS_TOKEN) and current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION:
-        if datetime.utcnow() < current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION:
+    if len(current_app.config.WECHAT_ACCESS_TOKEN):
+    # Check if current_app already has the access token.
+        if current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION and datetime.utcnow() < current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION:
+        # Check if there is a expiration datetime and whether it's expired
             return current_app.config.WECHAT_ACCESS_TOKEN
+
+        else:
+        # There is no expiration datetime or it's expired
+        # Request a new access token
+            r = request_wechat_access_token(Config.WECHAT_APPID, Config.WECHAT_APP_SECRET)
+            if r.get('access_token', None):
+            # Check if there was error requesting the access token
+            # If no error, use the result and store in current_app.config
+                current_app.config.WECHAT_ACCESS_TOKEN = r.get('access_token')
+                current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = datetime.utcnow() + timedelta(seconds=(r.get('expires_in') - 60))
+                return current_app.config.WECHAT_ACCESS_TOKEN
+            else:
+            # If there was an error, raise a ValueError exception.
+                raise ValueError(str(r.get('errcode', None)) + " " + r.get('errmsg', None))
     else:
+    # If current app does not have access token
+    # Request a new access token
         r = request_wechat_access_token(Config.WECHAT_APPID, Config.WECHAT_APP_SECRET)
-        if r.access_token:
-            current_app.config.WECHAT_ACCESS_TOKEN = r.access_token
-            current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = datetime.utcnow() + timedelta(seconds=(r.expires_in - 60))
+        if r.get('access_token', None):
+        # Check if there is error.
+            current_app.config.WECHAT_ACCESS_TOKEN = r.get('access_token')
+            current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = datetime.utcnow() + timedelta(seconds=(r.get('expires_in') - 60))
             return current_app.config.WECHAT_ACCESS_TOKEN
         else:
-            raise ValueError(r.errcode + " " + r.errmsg)
+            raise ValueError(str(r.get('errcode', None)) + " " + r.get('errmsg', None))
 
 
+def get_qr_code(student_id):
+    """
+    This function gets the qr code and embed the student id into the qr code.
+    """
+    pass
+
+
+@bluePrint.route('/qr_test', methods=['POST'])
+def qr_test():
+    """
+    This api gets all undeleted students from the DB.
+    """
+    try:
+        a = request_qr_code()
+        print("result")
+        print(a)
+    except ValueError as e:
+        raise(e)
+    return a, 201
+
+
+def request_qr_code():
+    """
+    This function sends a GET request to wechat server with appid and app secret to get the access token.
+    """
+    qr_code_url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit'
+    params = {
+        'access_token': '4_4XVVUetvjlvaPetZGdGFvoD7ZFHHxQYU0PIYFlY0FlKmKUqnrwGsJiR9py7CPFwisFaPVBtuS_X56k3ZxKZoqyD8L8-MMT52x9M6hGqq6QowkQ8FTjXO2srtaoYQIFLNAkdnRTqtU8EqQ9lVCTWgAFAGXA'
+    }
+    data = {
+        'path': '/pages/bindParent/index',
+        'width': 280,
+        'scene': 1
+    }
+    r = requests.post(qr_code_url, params = params, json=data)
+    # print(r.headers)
+    # print(r.content)
+    return r
 
 
 

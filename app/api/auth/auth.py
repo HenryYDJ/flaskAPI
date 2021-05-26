@@ -10,7 +10,7 @@ from app import jwt, db
 from app.api import bluePrint
 from app.models import User
 from .auth_utils import add_token_to_db, is_token_revoked, logout_user, jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_phone_user
+from app.dbUtils.dbUtils import query_existing_phone_user, query_existing_openid_user
 
 from app.models import ClassSession
 
@@ -83,12 +83,11 @@ def login_wechat():
     }
     r = requests.get(wechat_code2session_url, params=payload)
 
-    openid = r.json()['openid']
-    session_key = r.json()['session_key']
+    openid = r.json().get('openid', None)
+    session_key = r.json().get('session_key', None)
 
     # First check if the openID already exist in the DB.
-    user = User.query.filter(User.deleted == False).filter(
-        User.openID == openid).first()
+    user = query_existing_openid_user(openid)
 
     if user:
         user.sessionKey = session_key

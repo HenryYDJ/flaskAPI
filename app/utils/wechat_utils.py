@@ -12,5 +12,5 @@ def request_wechat_access_token(wechat_appid, wechat_app_secret):
         'secret': wechat_app_secret
     }
     r = requests.get(wechat_access_token_url, params=payload)
-
+    print(r.headers)
     return r.json()
