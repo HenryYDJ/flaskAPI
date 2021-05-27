@@ -126,13 +126,12 @@ def query_existing_class_sessions(start_time, end_time, teacher_id):
 
 def query_student_parents(student_id):
     """
-    This function selects all the parents that is accociated with a student.
+    This function selects all the parents' names and relations that is accociated with a student.
     # """
-    # parents = db.session.query(User, ParentHood).filter(User.deleted == False)\
-    #     .filter(ParentHood.deleted == False)\
-    #     .filter(User.id == ParentHood.parent_id).all()
-    parents = db.session.query(User).all()
-    print(parents)
+    parents = db.session.query(User.realName, ParentHood.relation).filter(User.deleted == False)\
+        .filter(ParentHood.deleted == False)\
+        .filter(User.id == ParentHood.parent_id)\
+        .filter(ParentHood.student_id == student_id).all()
     return parents
 
 

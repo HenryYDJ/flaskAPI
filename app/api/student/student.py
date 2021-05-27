@@ -76,14 +76,14 @@ def update_parent_hood():
 # @jwt_roles_required(Roles.PARENT)  # At least parent is required
 def get_student_parents():
     """
-    This api returns a list of parents of the student.
+    This api returns a list of parents and the relationship of the student_id
     """
-    # student_id = request.json.get('student_id', None)
-    result = query_student_parents(3)
-    print(result)
-
-
-    return jsonify(message="Updated parent hood info"), 201
+    student_id = request.json.get('student_id', None)
+    parents = query_student_parents(student_id)
+    result = []
+    for name, relation in parents:
+        result.append({"parent_name": name, "relation": relation})
+    return jsonify(message=result), 201
 
 
 @bluePrint.route('/students', methods=['GET'])
