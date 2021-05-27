@@ -1,5 +1,6 @@
 from app.models import Teaching, User, Course, CourseCredit, ParentHood, Student, TakingClass, ClassSession
 from app.utils.utils import Roles
+from app import db
 
 
 def query_existing_user(user_id):
@@ -110,7 +111,6 @@ def query_existing_taking_class(class_session_id, student_id):
     return taking_class
 
 
-# -----------------------------TEST-------------------------------
 def query_existing_class_sessions(start_time, end_time, teacher_id):
     """
     This function selects all the class session that a teacher is teaching, and within a certain time frame.
@@ -122,7 +122,19 @@ def query_existing_class_sessions(start_time, end_time, teacher_id):
         .filter(ClassSession.startTime >= start_time, ClassSession.startTime <= end_time)\
         .filter(Teaching.teacher_id == teacher_id).all()
     return sessions
-    
+
+
+def query_student_parents(student_id):
+    """
+    This function selects all the parents that is accociated with a student.
+    # """
+    # parents = db.session.query(User, ParentHood).filter(User.deleted == False)\
+    #     .filter(ParentHood.deleted == False)\
+    #     .filter(User.id == ParentHood.parent_id).all()
+    parents = db.session.query(User).all()
+    print(parents)
+    return parents
+
 
 # def query_existing_class_session(session_id, teacher_id):
 #     """

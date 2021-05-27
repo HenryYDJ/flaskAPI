@@ -7,12 +7,11 @@ from datetime import date, datetime
 from flask_jwt_extended import get_jwt_identity
 from app.utils.utils import Roles, Relationship, datetime_string_to_naive
 from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_existing_student,\
-    query_all_existing_students
+    query_all_existing_students, query_student_parents
 from app.utils.wechat_utils import request_wechat_access_token
 from datetime import datetime, timedelta
 from config import Config
 import requests
-import json
 
 # --------------------------Student Section----------------------------------------------------------
 @bluePrint.route('/student', methods=['POST'])
@@ -54,22 +53,36 @@ def update_parent_hood():
     """
     This api adds parenthood relationship to the DB.
     """
-    parent_id = request.json.get('parent_id', None)
     student_id = request.json.get('student_id', None)
     relation = request.json.get('relation', None)
+    parent_id = get_jwt_identity().get('id')
 
     parent_hood = query_parent_hood(parent_id, student_id)
 
     if parent_hood:
-        parent_hood.relation = Relationship.get(relation)  # get the int value of the ralation from the relation dict
+        parent_hood.relation = relation  # get the int value of the ralation from the relation dict
     else:
         parent_hood = ParentHood()
         parent_hood.parent = query_validated_user(parent_id)
         parent_hood.student = query_existing_student(student_id)
-        parent_hood.relation = Relationship.get(relation)
+        parent_hood.relation = relation
 
     db.session.add(parent_hood)
     db.session.commit()
+    return jsonify(message="Updated parent hood info"), 201
+
+
+@bluePrint.route('/student_parents', methods=['POST'])
+# @jwt_roles_required(Roles.PARENT)  # At least parent is required
+def get_student_parents():
+    """
+    This api returns a list of parents of the student.
+    """
+    # student_id = request.json.get('student_id', None)
+    result = query_student_parents(3)
+    print(result)
+
+
     return jsonify(message="Updated parent hood info"), 201
 
 
@@ -171,7 +184,7 @@ def request_qr_code():
     # print(r.content)
     return r
 
-
+# GOOD Resource: https://jdhao.github.io/2020/04/12/build_webapi_with_flask_s2/
 
 
 

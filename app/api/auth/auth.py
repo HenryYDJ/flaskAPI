@@ -86,7 +86,7 @@ def login_wechat():
     openid = r.json().get('openid', None)
     session_key = r.json().get('session_key', None)
 
-    # First check if the openID already exist in the DB.
+    # check if the openID already exists in the DB.
     user = query_existing_openid_user(openid)
 
     if user:

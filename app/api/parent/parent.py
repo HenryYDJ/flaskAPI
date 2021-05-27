@@ -38,3 +38,31 @@ def register_parent():
         return jsonify(message="Parent created successfully"), 201
     else:
         return jsonify(message='User does not exist'), 409
+
+
+# @bluePrint.route('/parent_hood', methods=['POST'])
+# @jwt_roles_required(Roles.EVERYBODY)
+# def register_parent():
+#     """
+#     This api adds parent's real information to the DB.
+#     """
+#     parent_id = get_jwt_identity().get('id')
+
+#     parent = query_existing_user(parent_id)
+#     phone = request.json['phone']
+
+#     if parent:
+#         parent.phone = request.json.get('phone', None)
+#         parent.realName = request.json.get('realName', None)
+#         parent.gender = request.json.get('gender', None)
+#         parent.language = request.json.get('language', 'CN')
+#         parent.province = request.json.get('province', None)
+#         parent.city = request.json.get('city', None)
+#         parent.avatar = request.json.get('avatar', None)
+#         parent.roles = Roles.PARENT
+#         parent.register_time = datetime.utcnow()
+#         db.session.add(parent)
+#         db.session.commit()
+#         return jsonify(message="Parent created successfully"), 201
+#     else:
+#         return jsonify(message='User does not exist'), 409
