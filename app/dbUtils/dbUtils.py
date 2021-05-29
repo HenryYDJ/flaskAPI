@@ -111,7 +111,7 @@ def query_existing_taking_class(class_session_id, student_id):
     return taking_class
 
 
-def query_existing_class_sessions(start_time, end_time, teacher_id):
+def query_teacher_class_sessions(start_time, end_time, teacher_id):
     """
     This function selects all the class session that a teacher is teaching, and within a certain time frame.
     """
@@ -124,6 +124,25 @@ def query_existing_class_sessions(start_time, end_time, teacher_id):
     return sessions
 
 
+def query_class_session(session_id):
+    """
+    This function selects one class session using the session id
+    """
+    class_session = ClassSession.query.filter(ClassSession.deleted == False).filter(ClassSession.id == session_id).first()
+    return class_session
+
+
+def query_session_students(session_id):
+    """
+    This functions retrieves all the students taking a class session
+    """
+    students = db.session.query(TakingClass, Student).filter(TakingClass.deleted == False)\
+        .filter(Student.deleted == False)\
+        .filter(TakingClass.student_id == Student.id)\
+        .filter(TakingClass.session_id == session_id).all()
+    return students
+
+
 def query_student_parents(student_id):
     """
     This function selects all the parents' names and relations that is accociated with a student.
@@ -133,6 +152,15 @@ def query_student_parents(student_id):
         .filter(User.id == ParentHood.parent_id)\
         .filter(ParentHood.student_id == student_id).all()
     return parents
+
+
+def query_student_credit(student_id, course_id):
+    """
+    This function selects the student credit using student_id and course_id
+    """
+    student_credit = CourseCredit.query.filter(CourseCredit.deleted == False)\
+        .filter(CourseCredit.student_id == student_id, CourseCredit.course_id == course_id).first()
+    return student_credit
 
 
 def query_student_credits(student_id):
@@ -180,6 +208,15 @@ def query_student_sessions(student_id, start_time_utc, end_time_utc):
         filter(TakingClass.student_id == student_id).\
         filter(ClassSession.startTime >= start_time_utc, ClassSession.startTime <= end_time_utc).all()
     return sessions
+
+
+def query_taking_class(student_id, session_id):
+    """
+    This function retrieves one taking class record using student_id and session_id
+    """
+    taking_class = TakingClass.query.filter(TakingClass.deleted == False).filter(TakingClass.session_id == session_id)\
+        .filter(TakingClass.student_id == student_id).first()
+    return taking_class
 
 
 def query_unvalidated_parents():

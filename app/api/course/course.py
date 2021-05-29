@@ -7,7 +7,7 @@ from app.models import Course, ClassSession, Teaching, TakingClass, CourseCredit
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_course, query_course_credit, query_existing_taking_class, \
-    query_existing_class_sessions, query_existing_courses_all
+    query_teacher_class_sessions, query_existing_courses_all, query_session_students
 from app.utils.utils import datetime_string_to_utc, Roles, \
     datetime_string_to_datetime, convert_to_UTC,dt_list_to_UTC_list
 from flask_jwt_extended import get_jwt_identity
@@ -138,7 +138,7 @@ def get_class_sessions():
     end_time_utc = datetime_string_to_utc(request.json.get('end_time', None))
     teacher_id = get_jwt_identity().get('id')
     
-    class_sessions = query_existing_class_sessions(start_time_utc, end_time_utc, teacher_id)
+    class_sessions = query_teacher_class_sessions(start_time_utc, end_time_utc, teacher_id)
     return jsonify(message=[class_session.to_dict() for class_session in class_sessions]), 201
 
     # TODO
@@ -196,6 +196,24 @@ def add_taking_class_session():
         db.session.add(taking_class)
         db.session.commit()
     return jsonify(message="Taking class information added"), 201
+
+
+@bluePrint.route('/students_taking_classes', methods=['POST'])
+@jwt_roles_required(Roles.TEACHER)
+def get_students_of_session():
+    """
+    This api returns all the students taking a class_session.
+    """
+    session_id = request.json.get('session_id', None)
+
+    students = query_session_students(session_id)
+
+    result = []
+    for _, student in students:
+        result.append({"student_id": student.id, "student_name": student.realName})
+    return jsonify(message=result), 201
+
+
 # @bluePrint.route('/student_course_credits', methods=['GET'])
 # @jwt_roles_required(Roles.TEACHER)  # Only teacher and above can add a course
 # def get_student_course_credits():

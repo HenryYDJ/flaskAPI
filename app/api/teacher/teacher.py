@@ -5,11 +5,11 @@ from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity
 
 from app import db
-from app.models import User
+from app.models import CourseCredit, TakingClass, User
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_teacher, query_validated_user, query_existing_phone_user, query_existing_user,\
-    query_teacher_sessions
+from app.dbUtils.dbUtils import query_existing_teacher, query_class_session, query_existing_user,\
+    query_teacher_sessions, query_student_credit, query_taking_class
 from app.utils.utils import Roles, datetime_string_to_utc
 
 
@@ -85,15 +85,68 @@ def get_teacher_sessions():
     return jsonify(message=result), 201
 
 
-@bluePrint.route('/dbutilstest', methods=['POST'])
-def dbutil_test():
+@bluePrint.route('/attendance_call', methods=['POST'])
+@jwt_roles_required(Roles.TEACHER)  # At least a principle can approve a teacher
+def attendance_call():
     """
-    This api registers one teacher to the DB.
+    This api takes the attendance call and substracts a course credit from the student's course credits.
     """
-    user_id = request.json['id']
-    user = query_validated_user(user_id)
-    print(user)
-    return jsonify(message="success"), 201
+    teacher_id = get_jwt_identity().get('id')
+    session_id = request.json.get('session_id', None)
+    student_ids = request.json.get('student_ids', None)
+
+    class_session = query_class_session(session_id)
+    
+    if class_session:
+        # Add attendance call info to class session
+        class_session.attendance_call = True
+        class_session.attendance_teacher_id = teacher_id
+        class_session.attendance_time = datetime.utcnow()
+
+        db.session.add(class_session)
+        db.session.commit()
+
+        course_id = class_session.course.id
+        for student_id in student_ids:
+            # Deduct credit from student credits
+            course_credit = query_student_credit(student_id, course_id)
+            if course_credit:
+                course_credit.credit = course_credit.credit - 1
+            else:
+                course_credit = CourseCredit()
+                course_credit.student_id = student_id
+                course_credit.course_id = course_id
+                course_credit.credit = -1
+            db.session.add(course_credit)
+            db.session.commit()
+
+            # Add student taking class information to db
+            taking_class = query_taking_class(student_id, session_id)
+            if taking_class:
+                taking_class.attended = True
+            else:
+                taking_class = TakingClass()
+                taking_class.student_id = student_id
+                taking_class.session_id = session_id
+                taking_class.attended = True
+            db.session.add(taking_class)
+            db.session.commit()
+        return jsonify(message="Attendance call success"), 201
+    else:
+        return jsonify(message="Cannot find class session"), 201
+
+
+
+
+# @bluePrint.route('/dbutilstest', methods=['POST'])
+# def dbutil_test():
+#     """
+#     This api registers one teacher to the DB.
+#     """
+#     user_id = request.json['id']
+#     user = query_validated_user(user_id)
+#     print(user)
+#     return jsonify(message="success"), 201
 
 
 # @bluePrint.route('/teacher', methods=['GET'])
