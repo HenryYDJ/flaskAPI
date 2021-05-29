@@ -1,17 +1,14 @@
-from flask import jsonify, request, current_app
+from flask import jsonify, request
 from app import db
 from app.models import Student, ParentHood
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from datetime import date, datetime
 from flask_jwt_extended import get_jwt_identity
-from app.utils.utils import Roles, Relationship, datetime_string_to_naive
+from app.utils.utils import Roles, Relationship, datetime_string_to_naive, datetime_string_to_utc
 from app.dbUtils.dbUtils import query_validated_user, query_parent_hood, query_existing_student,\
-    query_all_existing_students, query_student_parents
-from app.utils.wechat_utils import request_wechat_access_token
-from datetime import datetime, timedelta
-from config import Config
-import requests
+    query_all_existing_students, query_student_parents, query_student_credits, query_student_sessions
+from datetime import datetime
 
 # --------------------------Student Section----------------------------------------------------------
 @bluePrint.route('/student', methods=['POST'])
@@ -73,7 +70,7 @@ def update_parent_hood():
 
 
 @bluePrint.route('/student_parents', methods=['POST'])
-# @jwt_roles_required(Roles.PARENT)  # At least parent is required
+@jwt_roles_required(Roles.PARENT)  # At least parent is required
 def get_student_parents():
     """
     This api returns a list of parents and the relationship of the student_id
@@ -83,6 +80,27 @@ def get_student_parents():
     result = []
     for name, relation in parents:
         result.append({"parent_name": name, "relation": relation})
+    return jsonify(message=result), 201
+
+
+@bluePrint.route('/student_credits', methods=['POST'])
+@jwt_roles_required(Roles.PARENT)  # Only parent and up can see a student's remaining credits
+def get_student_credits():
+    """
+    This api gets the student's remaining credits.
+    """
+    # Check the requester's role, if only a parent, then can only access his/her own children course credits.
+    # requester_id = get_jwt_identity().get('id')
+    # requester = query_validated_user(requester_id)
+    # student_id = request.json.get('student_id', None)
+    # Parents can only get their associated students' course credits.
+    # if requester.get_role_value() <= Roles.PARENT:
+
+    student_id = request.json.get('student_id', None)
+    course_credits = query_student_credits(student_id)
+    result = []
+    for course_name, course_credit in course_credits:
+        result.append({"course_name": course_name, "course_credit": course_credit})
     return jsonify(message=result), 201
 
 
@@ -99,90 +117,111 @@ def get_students():
         return jsonify(message=[]), 201
 
 
-@bluePrint.route('/student_test', methods=['POST'])
-def student_test():
+@bluePrint.route('/student_sessions', methods=['POST'])
+@jwt_roles_required(Roles.TEACHER)  # At least a principle can approve a teacher
+def get_student_sessions():
     """
-    This api gets all undeleted students from the DB.
+    This api returns the student's sessions within a time frame.
     """
-    try:
-        a = get_access_token()
-        print(a)
-    except ValueError as e:
-        raise(e)
-    return jsonify(message='hi'), 201
+    student_id = request.json.get('student_id', None)
+    start_time = request.json.get('start_time', None)
+    end_time = request.json.get('end_time', None)
+
+    start_time_utc = datetime_string_to_utc(start_time)
+    end_time_utc = datetime_string_to_utc(end_time)
+
+    class_sessions = query_student_sessions(student_id, start_time_utc, end_time_utc)
+    
+    result = []
+    for class_session, taking_class in class_sessions:
+        result.append({"session_id": class_session.id, "course_name": class_session.course.name, "start_time": class_session.startTime, "duration": class_session.duration,\
+            "series_id": class_session.series_id, "attended": taking_class.attended})
+
+    return jsonify(message=result), 201
+# @bluePrint.route('/student_test', methods=['POST'])
+# def student_test():
+#     """
+#     This api gets all undeleted students from the DB.
+#     """
+#     try:
+#         a = get_access_token()
+#         print(a)
+#     except ValueError as e:
+#         raise(e)
+#     return jsonify(message='hi'), 201
 
 
-def get_access_token():
-    if len(current_app.config.WECHAT_ACCESS_TOKEN):
-    # Check if current_app already has the access token.
-        if current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION and datetime.utcnow() < current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION:
-        # Check if there is a expiration datetime and whether it's expired
-            return current_app.config.WECHAT_ACCESS_TOKEN
+# def get_access_token():
+#     if len(current_app.config.WECHAT_ACCESS_TOKEN):
+#     # Check if current_app already has the access token.
+#         if current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION and datetime.utcnow() < current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION:
+#         # Check if there is a expiration datetime and whether it's expired
+#             return current_app.config.WECHAT_ACCESS_TOKEN
 
-        else:
-        # There is no expiration datetime or it's expired
-        # Request a new access token
-            r = request_wechat_access_token(Config.WECHAT_APPID, Config.WECHAT_APP_SECRET)
-            if r.get('access_token', None):
-            # Check if there was error requesting the access token
-            # If no error, use the result and store in current_app.config
-                current_app.config.WECHAT_ACCESS_TOKEN = r.get('access_token')
-                current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = datetime.utcnow() + timedelta(seconds=(r.get('expires_in') - 60))
-                return current_app.config.WECHAT_ACCESS_TOKEN
-            else:
-            # If there was an error, raise a ValueError exception.
-                raise ValueError(str(r.get('errcode', None)) + " " + r.get('errmsg', None))
-    else:
-    # If current app does not have access token
-    # Request a new access token
-        r = request_wechat_access_token(Config.WECHAT_APPID, Config.WECHAT_APP_SECRET)
-        if r.get('access_token', None):
-        # Check if there is error.
-            current_app.config.WECHAT_ACCESS_TOKEN = r.get('access_token')
-            current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = datetime.utcnow() + timedelta(seconds=(r.get('expires_in') - 60))
-            return current_app.config.WECHAT_ACCESS_TOKEN
-        else:
-            raise ValueError(str(r.get('errcode', None)) + " " + r.get('errmsg', None))
-
-
-def get_qr_code(student_id):
-    """
-    This function gets the qr code and embed the student id into the qr code.
-    """
-    pass
+#         else:
+#         # There is no expiration datetime or it's expired
+#         # Request a new access token
+#             r = request_wechat_access_token(Config.WECHAT_APPID, Config.WECHAT_APP_SECRET)
+#             if r.get('access_token', None):
+#             # Check if there was error requesting the access token
+#             # If no error, use the result and store in current_app.config
+#                 current_app.config.WECHAT_ACCESS_TOKEN = r.get('access_token')
+#                 current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = datetime.utcnow() + timedelta(seconds=(r.get('expires_in') - 60))
+#                 return current_app.config.WECHAT_ACCESS_TOKEN
+#             else:
+#             # If there was an error, raise a ValueError exception.
+#                 raise ValueError(str(r.get('errcode', None)) + " " + r.get('errmsg', None))
+#     else:
+#     # If current app does not have access token
+#     # Request a new access token
+#         r = request_wechat_access_token(Config.WECHAT_APPID, Config.WECHAT_APP_SECRET)
+#         if r.get('access_token', None):
+#         # Check if there is error.
+#             current_app.config.WECHAT_ACCESS_TOKEN = r.get('access_token')
+#             current_app.config.WECHAT_ACCESS_TOKEN_EXPIRATION = datetime.utcnow() + timedelta(seconds=(r.get('expires_in') - 60))
+#             return current_app.config.WECHAT_ACCESS_TOKEN
+#         else:
+#             raise ValueError(str(r.get('errcode', None)) + " " + r.get('errmsg', None))
 
 
-@bluePrint.route('/qr_test', methods=['POST'])
-def qr_test():
-    """
-    This api gets all undeleted students from the DB.
-    """
-    try:
-        a = request_qr_code()
-        print("result")
-        print(a)
-    except ValueError as e:
-        raise(e)
-    return a, 201
+# def get_qr_code(student_id):
+#     """
+#     This function gets the qr code and embed the student id into the qr code.
+#     """
+#     pass
 
 
-def request_qr_code():
-    """
-    This function sends a GET request to wechat server with appid and app secret to get the access token.
-    """
-    qr_code_url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit'
-    params = {
-        'access_token': '4_4XVVUetvjlvaPetZGdGFvoD7ZFHHxQYU0PIYFlY0FlKmKUqnrwGsJiR9py7CPFwisFaPVBtuS_X56k3ZxKZoqyD8L8-MMT52x9M6hGqq6QowkQ8FTjXO2srtaoYQIFLNAkdnRTqtU8EqQ9lVCTWgAFAGXA'
-    }
-    data = {
-        'path': '/pages/bindParent/index',
-        'width': 280,
-        'scene': 1
-    }
-    r = requests.post(qr_code_url, params = params, json=data)
-    # print(r.headers)
-    # print(r.content)
-    return r
+# @bluePrint.route('/qr_test', methods=['POST'])
+# def qr_test():
+#     """
+#     This api gets all undeleted students from the DB.
+#     """
+#     try:
+#         a = request_qr_code()
+#         print("result")
+#         print(a)
+#     except ValueError as e:
+#         raise(e)
+#     return a, 201
+
+
+# def request_qr_code():
+#     """
+#     This function sends a GET request to wechat server with appid and app secret to get the access token.
+#     """
+#     qr_code_url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit'
+#     params = {
+#         'access_token': '4_4XVVUetvjlvaPetZGdGFvoD7ZFHHxQYU0PIYFlY0FlKmKUqnrwGsJiR9py7CPFwisFaPVBtuS_X56k3ZxKZoqyD8L8-MMT52x9M6hGqq6QowkQ8FTjXO2srtaoYQIFLNAkdnRTqtU8EqQ9lVCTWgAFAGXA'
+#     }
+#     data = {
+#         'path': '/pages/bindParent/index',
+#         'width': 280,
+#         'scene': 1
+#     }
+#     r = requests.post(qr_code_url, params = params, json=data)
+#     # print(r.headers)
+#     # print(r.content)
+#     return r
 
 # GOOD Resource: https://jdhao.github.io/2020/04/12/build_webapi_with_flask_s2/
 

@@ -102,6 +102,7 @@ class User(db.Model):
         This function is to help admins to approve an unapproved user.
         """
         return {
+            'user_id': self.id,
             'phone': self.phone,
             'real_name': self.realName,
             'role': self.roles

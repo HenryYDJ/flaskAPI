@@ -8,8 +8,9 @@ from app import db
 from app.models import User
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_teacher, query_validated_user, query_existing_phone_user, query_existing_user
-from app.utils.utils import Roles
+from app.dbUtils.dbUtils import query_existing_teacher, query_validated_user, query_existing_phone_user, query_existing_user,\
+    query_teacher_sessions
+from app.utils.utils import Roles, datetime_string_to_utc
 
 
 # -------------------Teachers Section--------------------------------------------------------
@@ -22,7 +23,6 @@ def register_teacher():
     teacher_id = get_jwt_identity().get('id')
 
     teacher = query_existing_user(teacher_id)
-    phone = request.json['phone']
 
     if teacher:
         teacher.phone = request.json.get('phone', None)
@@ -61,6 +61,28 @@ def approve_teacher():
         return jsonify(message="Teacher approved"), 200
     else:
         return jsonify(message="No such teacher"), 404
+
+
+@bluePrint.route('/teacher_sessions', methods=['POST'])
+@jwt_roles_required(Roles.TEACHER)  # At least a principle can approve a teacher
+def get_teacher_sessions():
+    """
+    This api returns the teacher's sessions within a time frame.
+    """
+    teacher_id = get_jwt_identity().get('id')
+    start_time = request.json.get('start_time', None)
+    end_time = request.json.get('end_time', None)
+
+    start_time_utc = datetime_string_to_utc(start_time)
+    end_time_utc = datetime_string_to_utc(end_time)
+
+    class_sessions = query_teacher_sessions(teacher_id, start_time_utc, end_time_utc)
+    
+    result = []
+    for class_session, _ in class_sessions:
+        result.append({"session_id": class_session.id, "course_name": class_session.course.name, "start_time": class_session.startTime, "duration": class_session.duration, "series_id": class_session.series_id})
+
+    return jsonify(message=result), 201
 
 
 @bluePrint.route('/dbutilstest', methods=['POST'])
