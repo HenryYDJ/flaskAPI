@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: af9e81b2790a
+Revision ID: ecbe4422edba
 Revises: 
-Create Date: 2021-05-12 23:17:05.688135
+Create Date: 2021-05-30 15:47:00.454021
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'af9e81b2790a'
+revision = 'ecbe4422edba'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -36,6 +36,7 @@ def upgrade():
     op.create_table('users',
     sa.Column('id', sa.INTEGER(), nullable=False),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
+    sa.Column('nickName', sa.String(), nullable=True),
     sa.Column('realName', sa.String(), nullable=True),
     sa.Column('phone', sa.String(), nullable=True),
     sa.Column('email', sa.String(), nullable=True),
@@ -49,7 +50,8 @@ def upgrade():
     sa.Column('language', sa.String(), nullable=True),
     sa.Column('city', sa.String(), nullable=True),
     sa.Column('province', sa.String(), nullable=True),
-    sa.Column('validated', sa.BOOLEAN(), nullable=True),
+    sa.Column('country', sa.String(), nullable=True),
+    sa.Column('validated', sa.INTEGER(), nullable=True),
     sa.Column('approve_time', sa.DATETIME(), nullable=True),
     sa.Column('approver', sa.INTEGER(), nullable=True),
     sa.ForeignKeyConstraint(['approver'], ['users.id'], ),

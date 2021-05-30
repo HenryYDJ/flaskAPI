@@ -58,7 +58,7 @@ def query_existing_openid_user(openid):
     """
     This function retrieves one existing user based on the user's wechat openid.
     """
-    user = User.query.filter(User.deleted == False).filter((User.openID == openid)).first()
+    user = User.query.filter(User.deleted == False).filter(User.openID == openid).first()
     return user
 
 

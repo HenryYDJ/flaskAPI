@@ -118,7 +118,7 @@ def get_students():
 
 
 @bluePrint.route('/student_sessions', methods=['POST'])
-@jwt_roles_required(Roles.TEACHER)  # At least a principle can approve a teacher
+@jwt_roles_required(Roles.PARENT)
 def get_student_sessions():
     """
     This api returns the student's sessions within a time frame.

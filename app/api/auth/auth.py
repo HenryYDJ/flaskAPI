@@ -72,7 +72,7 @@ def login_wechat():
     """
     This api logins a user through wechat app.
     """
-    code = request.json['code']
+    code = request.json.get('code', None)
 
     wechat_code2session_url = 'https://api.weixin.qq.com/sns/jscode2session'
     payload = {
@@ -82,6 +82,9 @@ def login_wechat():
         'grant_type': 'authorization_code'
     }
     r = requests.get(wechat_code2session_url, params=payload)
+    
+    if "errcode" in str(r.content):
+        return jsonify(message="Something wrong with the code"), 201
 
     openid = r.json().get('openid', None)
     session_key = r.json().get('session_key', None)
@@ -89,13 +92,11 @@ def login_wechat():
     # check if the openID already exists in the DB.
     user = query_existing_openid_user(openid)
 
-    if user:
-        user.sessionKey = session_key
-
-    else:
+    if not user:
         user = User()
-        user.openID = openid
-        user.sessionKey = session_key
+
+    user.openID = openid
+    user.sessionKey = session_key
 
     db.session.add(user)
     db.session.commit()
@@ -110,42 +111,3 @@ def login_wechat():
     add_token_to_db(refresh_token, current_app.config['JWT_IDENTITY_CLAIM'])
 
     return jsonify(ret), 201
-
-
-
-# @bluePrint.route('/auth/wechat_test', methods=['get'])
-# @jwt_required
-# def wechat_test():
-#     """
-#     This API revokes all the tokens including access and refresh tokens that belong to the user.
-#     """
-#     claims = get_jwt_claims().get('client')
-#     user_id = get_jwt_identity()
-#     print(claims)
-#     print(type(claims))
-#     print(user_id.get('id'))
-#     return jsonify(message="test!!!"), 200
-
-
-@bluePrint.route('/auth/roles_test', methods=['get'])
-@jwt_roles_required(3)
-def roles_test():
-    """
-    This API revokes all the tokens including access and refresh tokens that belong to the user.
-    """
-    print("authorized")
-    return jsonify(message="test!!!"), 200
-
-
-@bluePrint.route('/test1', methods=['POST'])
-def rel_test():
-    """
-    This API revokes all the tokens including access and refresh tokens that belong to the user.
-    """
-    course_id = request.json.get('courseID', None)
-
-    class_session = ClassSession()
-    class_session.course_id = course_id
-    db.session.add(class_session)
-    db.session.commit()
-    return jsonify(message="test!!!"), 200

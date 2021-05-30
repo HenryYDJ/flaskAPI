@@ -38,6 +38,7 @@ class User(db.Model):
 
     id = Column(INTEGER, primary_key=True)
     deleted = Column(BOOLEAN, default=False)  # Field to mark whether the account is deleted.
+    nickName = Column(String)  # Wechat nick name of the user
     realName = Column(String)  # Real name of the account owner
     phone = Column(String)  # Phone number of the account owner
     email = Column(String)  # Email of the account owner
@@ -52,6 +53,7 @@ class User(db.Model):
     language = Column(String)
     city = Column(String)
     province = Column(String)
+    country = Column(String)
     # Validation status: 0, not validated; 1, validated; 2, rejected
     validated = Column(INTEGER, default=0)  # Field to mark whether the user's account is validated by the admin.
     approve_time = Column(DATETIME)  # Server date and time when the use is approved.
@@ -84,6 +86,7 @@ class User(db.Model):
         """
         return {
             'id': self.id,
+            'nickName': self.nickName,
             'realName': self.realName,
             'phone': self.phone,
             'email': self.email,
@@ -104,6 +107,7 @@ class User(db.Model):
         return {
             'user_id': self.id,
             'phone': self.phone,
+            'nick_name': self.nickName,
             'real_name': self.realName,
             'role': self.roles
         }

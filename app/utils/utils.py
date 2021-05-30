@@ -75,8 +75,11 @@ Relationship = {
     "MOTHER": 2,
     "GRANDPA": 3,
     "GRANDMA": 4,
-    "BROTHER": 5,
-    "SISTER": 6,
-    "UNCLE": 7,
-    "AUNT": 8
+    "MOMGRANDPA": 5,
+    "MOMGRANDMA": 6,
+    "BROTHER": 7,
+    "SISTER": 8,
+    "UNCLE": 9,
+    "AUNT": 10,
+    "PARENT": 11
 }
