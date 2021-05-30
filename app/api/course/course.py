@@ -145,7 +145,7 @@ def get_class_sessions():
     # need to think about how to handle admin checking the class sessions
 
 
-@bluePrint.route('/course_credit', methods=['PUT'])
+@bluePrint.route('/course_credit', methods=['POST'])
 @jwt_roles_required(Roles.ADMIN)  # Only admin can adjust a course credit info
 def update_course_credit():
     """

@@ -17,3 +17,4 @@ class Config(object):
     WECHAT_APP_SECRET = os.environ.get('WECHAT_APP_SECRET')
     REDIS_HOST = os.environ.get('REDIS_HOST') or 'localhost'
     REDIS_PORT = os.environ.get('REDIS_PORT') or 6379
+    SUPER_ID = os.environ.get('SUPER_ID')

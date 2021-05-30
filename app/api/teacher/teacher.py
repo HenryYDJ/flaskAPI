@@ -93,7 +93,12 @@ def attendance_call():
     """
     teacher_id = get_jwt_identity().get('id')
     session_id = request.json.get('session_id', None)
-    student_ids = request.json.get('student_ids', None)
+    students = request.json.get('student_ids', None)
+    # Format of students message:
+    # {
+    # "session_id": 125,
+    # "student_ids": [{"student_id": 1, "attended": true}, {"student_id": 3, "attended": true}, {"student_id": 4, "attended": true}]
+    # }
 
     class_session = query_class_session(session_id)
     
@@ -107,8 +112,10 @@ def attendance_call():
         db.session.commit()
 
         course_id = class_session.course.id
-        for student_id in student_ids:
+        for student in students:
             # Deduct credit from student credits
+            student_id = student.get('student_id')
+            attended = student.get('attended')
             course_credit = query_student_credit(student_id, course_id)
             if course_credit:
                 course_credit.credit = course_credit.credit - 1
@@ -120,22 +127,21 @@ def attendance_call():
             db.session.add(course_credit)
             db.session.commit()
 
-            # Add student taking class information to db
-            taking_class = query_taking_class(student_id, session_id)
-            if taking_class:
-                taking_class.attended = True
-            else:
-                taking_class = TakingClass()
-                taking_class.student_id = student_id
-                taking_class.session_id = session_id
-                taking_class.attended = True
-            db.session.add(taking_class)
-            db.session.commit()
+            # Add student taking class information to db if attended
+            if attended:
+                taking_class = query_taking_class(student_id, session_id)
+                if taking_class:
+                    taking_class.attended = True
+                else:
+                    taking_class = TakingClass()
+                    taking_class.student_id = student_id
+                    taking_class.session_id = session_id
+                    taking_class.attended = True
+                db.session.add(taking_class)
+                db.session.commit()
         return jsonify(message="Attendance call success"), 201
     else:
         return jsonify(message="Cannot find class session"), 201
-
-
 
 
 # @bluePrint.route('/dbutilstest', methods=['POST'])

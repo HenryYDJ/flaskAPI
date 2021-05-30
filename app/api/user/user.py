@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, jsonify, request
+from flask.globals import current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from app import db
 from app.models import User
@@ -113,6 +114,29 @@ def get_user_role():
     else:
         return jsonify(message="No such user."), 400
 
+@bluePrint.route('/validate_admin', methods=['POST'])
+@jwt_required()  # Only a super can approve an admin
+def validate_admin():
+    """
+    This API validates an admin in the request
+    """
+    super_id = get_jwt_identity().get('id')
+
+    super = query_existing_user(super_id)
+    if current_app.config.get('SUPER_ID') and super.openID == current_app.config.get('SUPER_ID'):
+        admin_id = request.json.get('admin_id', None)
+        admin = query_existing_user(admin_id)
+        if admin:
+            admin.validated = True
+            admin.approver = super_id
+            admin.approve_time = datetime.utcnow()
+            db.session.add(admin)
+            db.session.commit()
+            return jsonify(message="Admin approved by the man!"), 201
+        else:
+            return jsonify(message="No such user"), 201
+    else:
+        return jsonify(message="What are you thinking?"), 201
 
 # @bluePrint.route('/user', methods=['GET'])
 # def get_user():
