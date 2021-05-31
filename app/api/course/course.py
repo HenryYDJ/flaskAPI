@@ -85,7 +85,7 @@ def add_class_session():
                     class_session = ClassSession()
                     class_session.course = course
                     class_session.series_id = series_id
-                    class_session.startTime = start_time_utc
+                    class_session.start_time = start_time_utc
                     class_session.duration = duration
                     class_session.info = info
                     
@@ -110,7 +110,7 @@ def add_class_session():
         else:
             class_session = ClassSession()
             class_session.course = course
-            class_session.startTime = convert_to_UTC(start_time_local)
+            class_session.start_time = convert_to_UTC(start_time_local)
             class_session.duration = duration
             class_session.info = info
 
@@ -210,7 +210,7 @@ def get_students_of_session():
 
     result = []
     for _, student in students:
-        result.append({"student_id": student.id, "student_name": student.realName})
+        result.append({"student_id": student.id, "student_name": student.real_name})
     return jsonify(message=result), 201
 
 

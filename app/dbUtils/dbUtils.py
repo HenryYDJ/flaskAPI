@@ -1,5 +1,5 @@
 from app.models import Teaching, User, Course, CourseCredit, ParentHood, Student, TakingClass, ClassSession
-from app.utils.utils import Roles
+from app.utils.utils import Roles, VALIDATIONS
 from app import db
 
 
@@ -16,7 +16,7 @@ def query_validated_user(user_id):
     This function retrieves one user if it is already validated. Otherwise, a None object is returned.
     """
     exist_user = query_existing_user(user_id)
-    if exist_user.validated:
+    if exist_user.validated == VALIDATIONS.APPROVED:
         return exist_user
     else:
         return None
@@ -58,7 +58,7 @@ def query_existing_openid_user(openid):
     """
     This function retrieves one existing user based on the user's wechat openid.
     """
-    user = User.query.filter(User.deleted == False).filter(User.openID == openid).first()
+    user = User.query.filter(User.deleted == False).filter(User.openid == openid).first()
     return user
 
 
@@ -82,6 +82,14 @@ def query_existing_teacher(teacher_id):
     """
     teacher = User.query.filter(User.deleted == False).filter(User.id == teacher_id, User.roles == Roles.TEACHER).first()
     return teacher
+
+
+def query_existing_teachers():
+    """
+    This function retrieves all existing teachers.
+    """
+    teachers = User.query.filter(User.deleted == False).filter(User.roles == Roles.TEACHER).all()
+    return teachers
 
 
 def query_course_credit(course_id, student_id):
@@ -119,7 +127,7 @@ def query_teacher_class_sessions(start_time, end_time, teacher_id):
         .filter(ClassSession.deleted == False)\
         .filter(Teaching.deleted == False)\
         .filter(ClassSession.id == Teaching.session_id)\
-        .filter(ClassSession.startTime >= start_time, ClassSession.startTime <= end_time)\
+        .filter(ClassSession.start_time >= start_time, ClassSession.start_time <= end_time)\
         .filter(Teaching.teacher_id == teacher_id).all()
     return sessions
 
@@ -147,7 +155,7 @@ def query_student_parents(student_id):
     """
     This function selects all the parents' names and relations that is accociated with a student.
     # """
-    parents = db.session.query(User.realName, ParentHood.relation).filter(User.deleted == False)\
+    parents = db.session.query(User.real_name, ParentHood.relation).filter(User.deleted == False)\
         .filter(ParentHood.deleted == False)\
         .filter(User.id == ParentHood.parent_id)\
         .filter(ParentHood.student_id == student_id).all()
@@ -194,7 +202,7 @@ def query_teacher_sessions(teacher_id, start_time_utc, end_time_utc):
         filter(Teaching.deleted == False).\
         filter(Teaching.session_id == ClassSession.id).\
         filter(Teaching.teacher_id == teacher_id).\
-        filter(ClassSession.startTime >= start_time_utc, ClassSession.startTime <= end_time_utc).all()
+        filter(ClassSession.start_time >= start_time_utc, ClassSession.start_time <= end_time_utc).all()
     return sessions
 
 
@@ -206,7 +214,7 @@ def query_student_sessions(student_id, start_time_utc, end_time_utc):
         filter(TakingClass.deleted == False).\
         filter(TakingClass.session_id == ClassSession.id).\
         filter(TakingClass.student_id == student_id).\
-        filter(ClassSession.startTime >= start_time_utc, ClassSession.startTime <= end_time_utc).all()
+        filter(ClassSession.start_time >= start_time_utc, ClassSession.start_time <= end_time_utc).all()
     return sessions
 
 
@@ -235,6 +243,13 @@ def query_parent_hood(parent_id, student_id):
         filter(ParentHood.student_id == student_id).first()
     return parent_hood
 
+
+def query_unrevoked_admins():
+    """
+    This function retrieves all the unrevoked admins
+    """
+    admins = User.query.filter(User.deleted == False).filter(User.roles == Roles.ADMIN).filter(User.validated != VALIDATIONS.REVOKED).all()
+    return admins
 
 # def query_existing_class_session(session_id, teacher_id):
 #     """

@@ -1,3 +1,4 @@
+from app.utils.utils import Relationship
 from sqlalchemy import Column, INTEGER, String, BOOLEAN, ForeignKey, DATETIME, BLOB
 from sqlalchemy.orm import backref
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,7 +11,7 @@ class Student(db.Model):
 
     id = Column(INTEGER, primary_key=True)
     deleted = Column(BOOLEAN, default=False)
-    realName = Column(String)
+    real_name = Column(String)
     dob = Column(DATETIME)  # Date of birth
     gender = Column(BOOLEAN)  # 0 for girl and 1 for boy
     creator_id = Column(INTEGER, ForeignKey('users.id'))
@@ -21,12 +22,12 @@ class Student(db.Model):
     creator = db.relationship("User", backref="created_students")
 
     def __repr__(self):
-        return "<Student(name='%s')>" % self.realName
+        return "<Student(name='%s')>" % self.real_name
 
     def to_dict(self):
         result = {
             "id": self.id,
-            "real_name": self.realName,
+            "real_name": self.real_name,
             "gender": self.gender
         }
         if self.dob:
@@ -38,8 +39,8 @@ class User(db.Model):
 
     id = Column(INTEGER, primary_key=True)
     deleted = Column(BOOLEAN, default=False)  # Field to mark whether the account is deleted.
-    nickName = Column(String)  # Wechat nick name of the user
-    realName = Column(String)  # Real name of the account owner
+    nick_name = Column(String)  # Wechat nick name of the user
+    real_name = Column(String)  # Real name of the account owner
     phone = Column(String)  # Phone number of the account owner
     email = Column(String)  # Email of the account owner
     pwhash = Column(String)  # Hashed password field.
@@ -47,8 +48,8 @@ class User(db.Model):
     # UTC time)
     roles = Column(INTEGER, default=0)
     avatar = Column(String)  # The avatar url of the user, updates everytime the user signs in.
-    openID = Column(String)  # wechat openID of the user
-    sessionKey = Column(String)  # wechat session Key of the user
+    openid = Column(String)  # wechat openid of the user
+    session_key = Column(String)  # wechat session Key of the user
     gender = Column(BOOLEAN)
     language = Column(String)
     city = Column(String)
@@ -57,7 +58,9 @@ class User(db.Model):
     # Validation status: 0, not validated; 1, validated; 2, rejected
     validated = Column(INTEGER, default=0)  # Field to mark whether the user's account is validated by the admin.
     approve_time = Column(DATETIME)  # Server date and time when the use is approved.
-    approver = Column(INTEGER, ForeignKey('users.id'), default=None)  # Approved by whom
+    approver_id = Column(INTEGER, ForeignKey('users.id'), default=None)  # Approved by whom
+
+    approved_users = db.relationship("User", backref=backref('approver', remote_side=[id]))  # All approved users by this user
 
     def set_pwhash(self, password):
         """
@@ -86,8 +89,8 @@ class User(db.Model):
         """
         return {
             'id': self.id,
-            'nickName': self.nickName,
-            'realName': self.realName,
+            'nick_name': self.nick_name,
+            'real_name': self.real_name,
             'phone': self.phone,
             'email': self.email,
             'roles': self.roles,
@@ -101,15 +104,16 @@ class User(db.Model):
     
     def validate_info(self):
         """
-        This function returns the user's phone, realName, Role in a dict.
+        This function returns the user's phone, real_name, Role in a dict.
         This function is to help admins to approve an unapproved user.
         """
         return {
             'user_id': self.id,
             'phone': self.phone,
-            'nick_name': self.nickName,
-            'real_name': self.realName,
-            'role': self.roles
+            'nick_name': self.nick_name,
+            'real_name': self.real_name,
+            'role': self.roles,
+            'validation_status': self.validated
         }
 
     def get_role_value(self):
@@ -170,7 +174,7 @@ class ClassSession(db.Model):
     series_id = Column(String, default=None)  # If the class session is in a series, then here is the UUID for the series
     course_id = Column(INTEGER, ForeignKey("courses.id"))
     deleted = Column(BOOLEAN, default=False)
-    startTime = Column(DATETIME)  # UTC time of the session start time
+    start_time = Column(DATETIME)  # UTC time of the session start time
     duration = Column(INTEGER)  # Duration of the event, in minutes
     info = Column(String)
     attendance_call = Column(BOOLEAN, default=False)  # Whether the teacher has taken the attendance
@@ -186,12 +190,12 @@ class ClassSession(db.Model):
             'session_id': self.id,
             'series_id': self.series_id,
             'course_name': self.course.name,
-            'start_time_utc': self.startTime.strftime('%Y-%m-%dT%H:%M:%S%z'),
+            'start_time_utc': self.start_time.strftime('%Y-%m-%dT%H:%M:%S%z'),
             'duration': self.duration,
             'attendance_call': self.attendance_call
         }
         if self.attendance_teacher:
-            result['attendance_teacher'] = self.attendance_teacher.realName
+            result['attendance_teacher'] = self.attendance_teacher.real_name
 
         if self.attendance_call:
             result['attendance_time_utc'] = self.attendance_time

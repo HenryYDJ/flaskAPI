@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: ecbe4422edba
+Revision ID: 1ed6b529d800
 Revises: 
-Create Date: 2021-05-30 15:47:00.454021
+Create Date: 2021-05-31 22:39:38.876684
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ecbe4422edba'
+revision = '1ed6b529d800'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -36,16 +36,16 @@ def upgrade():
     op.create_table('users',
     sa.Column('id', sa.INTEGER(), nullable=False),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
-    sa.Column('nickName', sa.String(), nullable=True),
-    sa.Column('realName', sa.String(), nullable=True),
+    sa.Column('nick_name', sa.String(), nullable=True),
+    sa.Column('real_name', sa.String(), nullable=True),
     sa.Column('phone', sa.String(), nullable=True),
     sa.Column('email', sa.String(), nullable=True),
     sa.Column('pwhash', sa.String(), nullable=True),
     sa.Column('register_time', sa.DATETIME(), nullable=True),
     sa.Column('roles', sa.INTEGER(), nullable=True),
     sa.Column('avatar', sa.String(), nullable=True),
-    sa.Column('openID', sa.String(), nullable=True),
-    sa.Column('sessionKey', sa.String(), nullable=True),
+    sa.Column('openid', sa.String(), nullable=True),
+    sa.Column('session_key', sa.String(), nullable=True),
     sa.Column('gender', sa.BOOLEAN(), nullable=True),
     sa.Column('language', sa.String(), nullable=True),
     sa.Column('city', sa.String(), nullable=True),
@@ -53,8 +53,8 @@ def upgrade():
     sa.Column('country', sa.String(), nullable=True),
     sa.Column('validated', sa.INTEGER(), nullable=True),
     sa.Column('approve_time', sa.DATETIME(), nullable=True),
-    sa.Column('approver', sa.INTEGER(), nullable=True),
-    sa.ForeignKeyConstraint(['approver'], ['users.id'], ),
+    sa.Column('approver_id', sa.INTEGER(), nullable=True),
+    sa.ForeignKeyConstraint(['approver_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('classSessions',
@@ -62,7 +62,7 @@ def upgrade():
     sa.Column('series_id', sa.String(), nullable=True),
     sa.Column('course_id', sa.INTEGER(), nullable=True),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
-    sa.Column('startTime', sa.DATETIME(), nullable=True),
+    sa.Column('start_time', sa.DATETIME(), nullable=True),
     sa.Column('duration', sa.INTEGER(), nullable=True),
     sa.Column('info', sa.String(), nullable=True),
     sa.Column('attendance_call', sa.BOOLEAN(), nullable=True),
@@ -87,7 +87,7 @@ def upgrade():
     op.create_table('students',
     sa.Column('id', sa.INTEGER(), nullable=False),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
-    sa.Column('realName', sa.String(), nullable=True),
+    sa.Column('real_name', sa.String(), nullable=True),
     sa.Column('dob', sa.DATETIME(), nullable=True),
     sa.Column('gender', sa.BOOLEAN(), nullable=True),
     sa.Column('creator_id', sa.INTEGER(), nullable=True),

@@ -17,7 +17,7 @@ def add_student():
     """
     This api adds one student to the DB.
     """
-    realName = request.json.get('realName', None)
+    real_name = request.json.get('real_name', None)
     dob = request.json.get('dob', None)
     gender = request.json.get('gender', None)
     creator_id = get_jwt_identity().get('id')
@@ -34,7 +34,7 @@ def add_student():
         student.creator = creator
     else:
         return jsonify(message="Wrong input"), 400
-    student.realName = realName
+    student.real_name = real_name
     student.dob = dob_naive
     student.gender = gender
     student.create_time = datetime.utcnow()
@@ -134,7 +134,7 @@ def get_student_sessions():
     
     result = []
     for class_session, taking_class in class_sessions:
-        result.append({"session_id": class_session.id, "course_name": class_session.course.name, "start_time": class_session.startTime, "duration": class_session.duration,\
+        result.append({"session_id": class_session.id, "course_name": class_session.course.name, "start_time": class_session.start_time, "duration": class_session.duration,\
             "series_id": class_session.series_id, "attended": taking_class.attended})
 
     return jsonify(message=result), 201

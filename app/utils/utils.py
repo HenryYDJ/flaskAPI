@@ -70,16 +70,21 @@ class Roles:
     ADMIN = 16
 
 
-Relationship = {
-    "FATHER": 1,
-    "MOTHER": 2,
-    "GRANDPA": 3,
-    "GRANDMA": 4,
-    "MOMGRANDPA": 5,
-    "MOMGRANDMA": 6,
-    "BROTHER": 7,
-    "SISTER": 8,
-    "UNCLE": 9,
-    "AUNT": 10,
-    "PARENT": 11
-}
+class Relationship:
+    FATHER = 1
+    MOTHER = 2
+    GRANDPA = 3
+    GRANDMA = 4
+    MOMGRANDPA = 5
+    MOMGRANDMA = 6
+    BROTHER = 7
+    SISTER = 8
+    UNCLE = 9
+    AUNT = 10
+    PARENT = 11
+
+class VALIDATIONS:
+    WAITING = 0
+    APPROVED = 1
+    DENIED = 2
+    REVOKED = 3

@@ -25,7 +25,7 @@ def register_parent():
 
     if parent:
         parent.phone = request.json.get('phone', None)
-        parent.realName = request.json.get('realName', None)
+        parent.real_name = request.json.get('real_name', None)
         parent.gender = request.json.get('gender', None)
         parent.language = request.json.get('language', 'CN')
         parent.province = request.json.get('province', None)
@@ -47,15 +47,16 @@ def validate_parent():
     This api validates a parent in the DB.
     """
     parent_id = request.json.get('parent_id', None)
+    decision = request.json.get('decision', 0)
     parent = query_existing_user(parent_id)
 
     if parent:
-        parent.validated = 1
-        parent.approver = get_jwt_identity().get('id')
+        parent.validated = decision
+        parent.approver_id = get_jwt_identity().get('id')
         parent.approve_time = datetime.utcnow()
         db.session.add(parent)
         db.session.commit()
-        return jsonify(message="Parent validated successfully"), 201
+        return jsonify(message="Parent validation updated"), 201
     else:
         return jsonify(message='User does not exist'), 201
 

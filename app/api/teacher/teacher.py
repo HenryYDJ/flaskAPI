@@ -9,7 +9,7 @@ from app.models import CourseCredit, TakingClass, User
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_teacher, query_class_session, query_existing_user,\
-    query_teacher_sessions, query_student_credit, query_taking_class
+    query_teacher_sessions, query_student_credit, query_taking_class, query_existing_teachers
 from app.utils.utils import Roles, datetime_string_to_utc
 
 
@@ -26,7 +26,7 @@ def register_teacher():
 
     if teacher:
         teacher.phone = request.json.get('phone', None)
-        teacher.realName = request.json.get('realName', None)
+        teacher.real_name = request.json.get('real_name', None)
         teacher.gender = request.json.get('gender', None)
         teacher.language = request.json.get('language', 'CN')
         teacher.province = request.json.get('province', None)
@@ -47,20 +47,21 @@ def approve_teacher():
     """
     This api approves a registered teacher in the DB.
     """
-    teacher_id = request.json['teacher_id']
+    teacher_id = request.json.get('teacher_id', None)
+    decision = request.json.get('decision', 0)
 
     teacher = query_existing_teacher(teacher_id)
 
     if teacher:
-        teacher.approver = get_jwt_identity().get('id')
+        teacher.approver_id = get_jwt_identity().get('id')
         teacher.approve_time = datetime.utcnow()
-        teacher.validated = True
+        teacher.validated = decision
 
         db.session.add(teacher)
         db.session.commit()
-        return jsonify(message="Teacher approved"), 200
+        return jsonify(message="Teacher validation status changed"), 200
     else:
-        return jsonify(message="No such teacher"), 404
+        return jsonify(message="No such teacher"), 201
 
 
 @bluePrint.route('/teacher_sessions', methods=['POST'])
@@ -80,7 +81,7 @@ def get_teacher_sessions():
     
     result = []
     for class_session, _ in class_sessions:
-        result.append({"session_id": class_session.id, "course_name": class_session.course.name, "start_time": class_session.startTime, "duration": class_session.duration, "series_id": class_session.series_id})
+        result.append({"session_id": class_session.id, "course_name": class_session.course.name, "start_time": class_session.start_time, "duration": class_session.duration, "series_id": class_session.series_id})
 
     return jsonify(message=result), 201
 
@@ -142,6 +143,16 @@ def attendance_call():
         return jsonify(message="Attendance call success"), 201
     else:
         return jsonify(message="Cannot find class session"), 201
+
+
+@bluePrint.route('/teachers', methods=['GET'])
+@jwt_roles_required(Roles.ADMIN)
+def get_teachers():
+    """
+    This api gets all undeleted teachers from the DB.
+    """
+    teachers = query_existing_teachers()
+    return jsonify(message=[teacher.validate_info() for teacher in teachers]), 201
 
 
 # @bluePrint.route('/dbutilstest', methods=['POST'])

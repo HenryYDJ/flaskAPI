@@ -8,7 +8,7 @@ from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_phone_user, query_existing_teacher,\
     query_validated_user, query_existing_user,\
-    query_unvalidated_users
+    query_unvalidated_users, query_unrevoked_admins
 from app.utils.utils import Roles
 
 #-----------------------Users Section-----------------------------------------
@@ -74,16 +74,19 @@ def validate_user():
     This API validates the user in the request
     """
     user_id = request.json.get('user_id', None)
+    decision = request.json.get('decision', None)
 
     user = query_existing_user(user_id)
 
     if user:
-        user.validated = True
-        user.approver = get_jwt_identity().get('id')
+        user.validated = decision
+        user.approver_id = get_jwt_identity().get('id')
         user.approve_time = datetime.utcnow()
-        return jsonify(message="User is approved"), 201
+        db.session.add(user)
+        db.session.commit()
+        return jsonify(message="User validation status changed"), 201
     else:
-        return jsonify(message="User does not exist"), 400
+        return jsonify(message="User does not exist"), 201
 
 
 @bluePrint.route('/unvalidated_users', methods=['GET'])
@@ -123,33 +126,53 @@ def validate_admin():
     super_id = get_jwt_identity().get('id')
 
     super = query_existing_user(super_id)
-    if current_app.config.get('SUPER_ID') and super.openID == current_app.config.get('SUPER_ID'):
+
+    if current_app.config.get('SUPER_ID') and super.openid == current_app.config.get('SUPER_ID'):
         admin_id = request.json.get('admin_id', None)
+        decision = request.json.get('decision', 0)
         admin = query_existing_user(admin_id)
         if admin:
-            admin.validated = True
-            admin.approver = super_id
+            admin.validated = decision
+            admin.approver_id = super_id
             admin.approve_time = datetime.utcnow()
             db.session.add(admin)
             db.session.commit()
-            return jsonify(message="Admin approved by the man!"), 201
+            return jsonify(message="Admin validation status changed by the man"), 201
         else:
             return jsonify(message="No such user"), 201
     else:
         return jsonify(message="What are you thinking?"), 201
 
-# @bluePrint.route('/user', methods=['GET'])
-# def get_user():
-#     """
-#     This api gets one user from the DB by the user's id.
-#     """
-#     id = request.args.get('user_id', None)
 
-#     user = User.query.filter_by(id=id, deleted=False).first()
-#     if user:
-#         return jsonify(user_schema.dump(user))
-#     else:
-#         return jsonify(message="User not found"), 404
+@bluePrint.route('/get_admins', methods=['GET'])
+@jwt_required()  # Only a super can approve an admin
+def get_admins():
+    """
+    This API gets all admins in the DB
+    """
+    super_id = get_jwt_identity().get('id')
+
+    super = query_existing_user(super_id)
+
+    if current_app.config.get('SUPER_ID') and super.openid == current_app.config.get('SUPER_ID'):
+        admins = query_unrevoked_admins()
+        return jsonify(message=[admin.validate_info() for admin in admins]), 201
+    else:
+        return jsonify(message="What are you thinking?"), 201
+
+
+@bluePrint.route('/get_approvees', methods=['POST'])
+def get_approvees():
+    """
+    This api gets all approved user by user_id
+    """
+    user_id = request.json.get('user_id', None)
+
+    user = query_existing_user(user_id)
+    print(user.approver)
+
+    return jsonify(message="User does not exist"), 400
+
 
 
 # @bluePrint.route('/users', methods=['GET'])

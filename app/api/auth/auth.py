@@ -89,14 +89,14 @@ def login_wechat():
     openid = r.json().get('openid', None)
     session_key = r.json().get('session_key', None)
 
-    # check if the openID already exists in the DB.
+    # check if the openid already exists in the DB.
     user = query_existing_openid_user(openid)
 
     if not user:
         user = User()
 
-    user.openID = openid
-    user.sessionKey = session_key
+    user.openid = openid
+    user.session_key = session_key
 
     db.session.add(user)
     db.session.commit()
