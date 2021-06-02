@@ -113,7 +113,8 @@ class User(db.Model):
             'nick_name': self.nick_name,
             'real_name': self.real_name,
             'role': self.roles,
-            'validation_status': self.validated
+            'validation_status': self.validated,
+            'registeration_time': self.register_time
         }
 
     def get_role_value(self):

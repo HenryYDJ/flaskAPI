@@ -39,12 +39,15 @@ def get_user():
     This api gets one user from the DB by the access token.
     """
     id = get_jwt_identity().get('id')
-    user = query_existing_user(id)
+    user = query_existing_user(id)    
     
     if user:
-        return jsonify(message=user.full_info()), 201
+        result = user.full_info()
+        if current_app.config.get('SUPER_ID') and user.openid == current_app.config.get("SUPER_ID"):
+            result['is_super'] = True
+        return jsonify(message=result), 201
     else:
-        return jsonify(message="User not found"), 404
+        return jsonify(message="User not found"), 201
 
 
 @bluePrint.route('/user_role', methods=['POST'])
