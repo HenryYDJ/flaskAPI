@@ -9,7 +9,7 @@ from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_phone_user, query_existing_teacher,\
     query_validated_user, query_existing_user,\
     query_unvalidated_users, query_unrevoked_admins
-from app.utils.utils import Roles
+from app.utils.utils import Roles, VALIDATIONS
 
 #-----------------------Users Section-----------------------------------------
 @bluePrint.route('/user', methods=['POST'])
@@ -119,6 +119,36 @@ def get_user_role():
         return jsonify(message=user.get_roles()), 201
     else:
         return jsonify(message="No such user."), 400
+
+
+@bluePrint.route('/add_admin', methods=['POST'])
+@jwt_roles_required(Roles.EVERYBODY)
+def add_admin():
+    """
+    This API registers an admin
+    """
+    user_id = get_jwt_identity().get('id')
+    user = query_existing_user(user_id)
+
+    if user:
+        user.roles = Roles.ADMIN
+        user.avatar = request.json.get('avatar', None)
+        user.phone = request.json.get('phone', None)
+        user.gender = request.json.get('gender', None)
+        user.real_name = request.json.get('real_name', None)
+        user.language = request.json.get('language', 'CN')
+        user.province = request.json.get('province', None)
+        user.city = request.json.get('city', None)
+        user.register_time = datetime.utcnow()
+        user.nick_name = request.json.get('nick_name', None)
+        user.validated = VALIDATIONS.WAITING
+
+        db.session.add(user)
+        db.session.commit()
+        return jsonify(message="Admin added!"), 201
+    else:
+        return jsonify(message="No such user"), 201
+
 
 @bluePrint.route('/validate_admin', methods=['POST'])
 @jwt_required()  # Only a super can approve an admin
