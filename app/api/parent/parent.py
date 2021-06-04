@@ -9,7 +9,7 @@ from app import db
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_user, query_unvalidated_parents, query_parent_hood
-from app.utils.utils import Roles
+from app.utils.utils import Roles, VALIDATIONS
 
 
 # -------------------Teachers Section--------------------------------------------------------
@@ -25,6 +25,7 @@ def register_parent():
 
     if parent:
         parent.phone = request.json.get('phone', None)
+        parent.nick_name = request.json.get('nick_name', None)
         parent.real_name = request.json.get('real_name', None)
         parent.gender = request.json.get('gender', None)
         parent.language = request.json.get('language', 'CN')
@@ -81,25 +82,57 @@ def get_unvalidated_parents():
 @jwt_roles_required(Roles.PARENT)  # Bind the parents to the students.
 def bind_parents():
     """
-    This API binds a parent with the student.
+    This API adds parent information into DB and binds a parent with a student.
     """
     parent_id = get_jwt_identity().get('id')
     student_id = request.json.get('student_id', None)
+    teacher_id = request.json.get('teacher_id', None)
     relation = request.json.get('relation', None)
 
     parent_hood = query_parent_hood(parent_id, student_id)
+    # First, find the parent based on the parent_id
+    parent = query_existing_user(parent_id)
+    if parent:
+        # If the parent is already logged in, then add the info into db
+        parent.phone = request.json.get('phone', None)
+        parent.real_name = request.json.get('real_name', None)
 
-    if parent_hood:
-        original_relation = parent_hood.relation
-        parent_hood.relation = relation
-        db.session.add(parent_hood)
+        # The following info can be get from wechat
+        parent.nick_name = request.json.get('nick_name', None)
+        parent.gender = request.json.get('gender', None)
+        parent.language = request.json.get('language', 'CN')
+        parent.province = request.json.get('province', None)
+        parent.city = request.json.get('city', None)
+        parent.avatar = request.json.get('avatar', None)
+        if parent.roles <= Roles.PARENT:
+            # If the user's role is no larger than PARENT
+            # Then change the user's role and register_time, validated status, approve_time, approver_id
+            # Else, the following information stay the same.
+            parent.roles = Roles.PARENT
+            parent.register_time = datetime.utcnow()
+            parent.validated = VALIDATIONS.APPROVED
+            parent.approve_time = datetime.utcnow()
+            parent.approver_id = teacher_id
+        db.session.add(parent)
         db.session.commit()
-        return jsonify(message="modified relation from " + str(original_relation) + " to " + str(relation)), 201
+
+        if parent_hood:
+            # Second, find if there is already a parenthood record in the DB
+            # If so, update the original parenthood to a new value
+            original_relation = parent_hood.relation
+            parent_hood.relation = relation
+            db.session.add(parent_hood)
+            db.session.commit()
+            return jsonify(message="modified relation from " + str(original_relation) + " to " + str(relation)), 201
+        else:
+            # If no such parenthood in the DB
+            # Create a new one in the DB
+            parent_hood = ParentHood()
+            parent_hood.parent_id = parent_id
+            parent_hood.student_id = student_id
+            parent_hood.relation = relation
+            db.session.add(parent_hood)
+            db.session.commit()
+            return jsonify(message="Successfully binded parent"), 201
     else:
-        parent_hood = ParentHood()
-        parent_hood.parent_id = parent_id
-        parent_hood.student_id = student_id
-        parent_hood.relation = relation
-        db.session.add(parent_hood)
-        db.session.commit()
-        return jsonify(message="Successfully binded parent"), 201
+        return jsonify(message="No such user"), 201
