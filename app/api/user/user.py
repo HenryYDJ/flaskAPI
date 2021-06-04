@@ -178,7 +178,7 @@ def validate_admin():
 
 
 @bluePrint.route('/get_admins', methods=['GET'])
-@jwt_required()  # Only a super can approve an admin
+@jwt_required()  # Only the super can get the admin list
 def get_admins():
     """
     This API gets all admins in the DB
@@ -205,50 +205,3 @@ def get_approvees():
     print(user.approver)
 
     return jsonify(message="User does not exist"), 400
-
-
-
-# @bluePrint.route('/users', methods=['GET'])
-# def get_users():
-#     """
-#     This api gets all users from the DB.
-#     """
-#     users = User.query.filter_by(deleted=False).all()
-#     if users:
-#         return jsonify(users_schema.dump(users))
-#     else:
-#         return jsonify(message="No users found"), 404
-
-
-# @bluePrint.route('/user', methods=['PUT'])
-# def update_user():
-#     """
-#     This api updates a user's information based on the user's id
-#     """
-#     id = request.args.get('user_id', None)
-
-#     user = User.query.filter_by(id=id, deleted=False).first()
-#     if user:
-#         user.name = request.json["name"]
-#         db.session.add(user)
-#         db.session.commit()
-#         return jsonify(user_schema.dump(user))
-#     else:
-#         return jsonify(message="User not found"), 404
-
-
-# @bluePrint.route('/user', methods=['DELETE'])
-# def delete_user(user_id):
-#     """
-#     This api deletes a user by user's id from the DB.
-#     """
-#     id = request.args.get('user_id', None)
-
-#     user = User.query.filter_by(id=id, deleted=False).first()
-#     if user:
-#         user.deleted = True
-#         db.session.add(user)
-#         db.session.commit()
-#         return jsonify(user_schema.dump(user))
-#     else:
-#         return jsonify(message="User not found"), 404
