@@ -3,7 +3,7 @@ from datetime import datetime
 
 from flask import jsonify, request
 
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app import db
 from app.api import bluePrint
@@ -79,7 +79,7 @@ def get_unvalidated_parents():
 
 
 @bluePrint.route('/bind_parents', methods=['POST'])
-@jwt_roles_required(Roles.PARENT)  # Bind the parents to the students.
+@jwt_required()
 def bind_parents():
     """
     This API adds parent information into DB and binds a parent with a student.

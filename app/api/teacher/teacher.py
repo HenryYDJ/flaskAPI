@@ -81,7 +81,7 @@ def get_teacher_sessions():
     
     result = []
     for class_session, _ in class_sessions:
-        result.append({"session_id": class_session.id, "course_name": class_session.course.name, "start_time": class_session.start_time, "duration": class_session.duration, "series_id": class_session.series_id})
+        result.append(class_session.to_dict())
 
     return jsonify(message=result), 201
 
