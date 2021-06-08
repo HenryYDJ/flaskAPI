@@ -251,6 +251,17 @@ def query_unrevoked_admins():
     admins = User.query.filter(User.deleted == False).filter(User.roles == Roles.ADMIN).filter(User.validated != VALIDATIONS.REVOKED).all()
     return admins
 
+
+def query_parent_students(parent_id):
+    """
+    This function get all the students of a parent
+    """
+    students = db.session.query(Student, ParentHood).filter(ParentHood.deleted == False).\
+        filter(Student.deleted == False).\
+        filter(ParentHood.student_id == Student.id).\
+        filter(ParentHood.parent_id == parent_id).all()
+    return students
+
 # def query_existing_class_session(session_id, teacher_id):
 #     """
 #     This function selects one session based on the session_id and teacher_id.

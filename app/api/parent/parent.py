@@ -8,7 +8,8 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from app import db
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
-from app.dbUtils.dbUtils import query_existing_user, query_unvalidated_parents, query_parent_hood
+from app.dbUtils.dbUtils import query_existing_user, query_unvalidated_parents, query_parent_hood,\
+    query_parent_students
 from app.utils.utils import Roles, VALIDATIONS
 
 
@@ -136,3 +137,18 @@ def bind_parents():
             return jsonify(message="Successfully binded parent"), 201
     else:
         return jsonify(message="No such user"), 201
+
+
+@bluePrint.route('/parent_students', methods=['GET'])
+@jwt_roles_required(Roles.PARENT)
+def get_parent_students():
+    """
+    This api gets the students of a parent.
+    """
+    parent_id = get_jwt_identity().get('id')
+    parent = query_existing_user(parent_id)
+    if parent:
+        students = query_parent_students(parent_id)
+        return jsonify(message=[student.to_dict() for student, _ in students]), 201
+    else:
+        return jsonify(message='User does not exist'), 201
