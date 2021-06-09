@@ -9,8 +9,8 @@ from app import db
 from app.api import bluePrint
 from app.api.auth.auth_utils import jwt_roles_required
 from app.dbUtils.dbUtils import query_existing_user, query_unvalidated_parents, query_parent_hood,\
-    query_parent_students
-from app.utils.utils import Roles, VALIDATIONS
+    query_parent_students, query_student_sessions
+from app.utils.utils import Roles, VALIDATIONS, datetime_string_to_utc
 
 
 # -------------------Teachers Section--------------------------------------------------------
@@ -150,5 +150,36 @@ def get_parent_students():
     if parent:
         students = query_parent_students(parent_id)
         return jsonify(message=[student.to_dict() for student, _ in students]), 201
+    else:
+        return jsonify(message='User does not exist'), 201
+
+
+@bluePrint.route('/parent_students_sessions', methods=['POST'])
+@jwt_roles_required(Roles.PARENT)
+def get_parent_students_sessions():
+    """
+    This api gets all the parent's student's sessions within the time frame.
+    """
+    parent_id = get_jwt_identity().get('id')
+    start_time = request.json.get('start_time', None)
+    end_time = request.json.get('end_time', None)
+
+    start_time_utc = datetime_string_to_utc(start_time)
+    end_time_utc = datetime_string_to_utc(end_time)
+
+    parent = query_existing_user(parent_id)
+
+    result = []
+    if parent:
+        students = query_parent_students(parent_id)
+        for student, _ in students:
+            class_sessions = query_student_sessions(student.id, start_time_utc, end_time_utc)
+            student_result = student.to_dict()
+            student_result['class_sessions'] = []
+            for class_session, _ in class_sessions:
+                student_result['class_sessions'].append(class_session.to_dict())
+            result.append(student_result)
+
+        return jsonify(message=result), 201
     else:
         return jsonify(message='User does not exist'), 201
