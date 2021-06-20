@@ -11,7 +11,7 @@ class Student(db.Model):
 
     id = Column(INTEGER, primary_key=True)
     deleted = Column(BOOLEAN, default=False)
-    real_name = Column(String)
+    real_name = Column(String(20))
     dob = Column(DATETIME)  # Date of birth
     gender = Column(BOOLEAN)  # 0 for girl and 1 for boy
     creator_id = Column(INTEGER, ForeignKey('users.id'))
@@ -39,22 +39,22 @@ class User(db.Model):
 
     id = Column(INTEGER, primary_key=True)
     deleted = Column(BOOLEAN, default=False)  # Field to mark whether the account is deleted.
-    nick_name = Column(String)  # Wechat nick name of the user
-    real_name = Column(String)  # Real name of the account owner
-    phone = Column(String)  # Phone number of the account owner
-    email = Column(String)  # Email of the account owner
-    pwhash = Column(String)  # Hashed password field.
+    nick_name = Column(String(20))  # Wechat nick name of the user
+    real_name = Column(String(20))  # Real name of the account owner
+    phone = Column(String(20))  # Phone number of the account owner
+    email = Column(String(50))  # Email of the account owner
+    pwhash = Column(String(200))  # Hashed password field.
     register_time = Column(DATETIME)  # Server date and time when registration was submitted. (All datetime are in
     # UTC time)
     roles = Column(INTEGER, default=0)
-    avatar = Column(String)  # The avatar url of the user, updates everytime the user signs in.
-    openid = Column(String)  # wechat openid of the user
-    session_key = Column(String)  # wechat session Key of the user
+    avatar = Column(String(200))  # The avatar url of the user, updates everytime the user signs in.
+    openid = Column(String(100))  # wechat openid of the user
+    session_key = Column(String(200))  # wechat session Key of the user
     gender = Column(BOOLEAN)
-    language = Column(String)
-    city = Column(String)
-    province = Column(String)
-    country = Column(String)
+    language = Column(String(20))
+    city = Column(String(20))
+    province = Column(String(20))
+    country = Column(String(100))
     # Validation status: 0, not validated; 1, validated; 2, rejected
     validated = Column(INTEGER, default=0)  # Field to mark whether the user's account is validated by the admin.
     approve_time = Column(DATETIME)  # Server date and time when the use is approved.
@@ -140,7 +140,7 @@ class Course(db.Model):
 
     id = Column(INTEGER, primary_key=True)
     deleted = Column(BOOLEAN, default=False)
-    name = Column(String)
+    name = Column(String(100))
 
     def __repr__(self):
         return "<Course(course name='%s')>" % self.name
@@ -172,12 +172,12 @@ class ClassSession(db.Model):
     __tablename__ = "classSessions"
 
     id = Column(INTEGER, primary_key=True)
-    series_id = Column(String, default=None)  # If the class session is in a series, then here is the UUID for the series
+    series_id = Column(String(200), default=None)  # If the class session is in a series, then here is the UUID for the series
     course_id = Column(INTEGER, ForeignKey("courses.id"))
     deleted = Column(BOOLEAN, default=False)
     start_time = Column(DATETIME)  # UTC time of the session start time
     duration = Column(INTEGER)  # Duration of the event, in minutes
-    info = Column(String)
+    info = Column(String(500))
     attendance_call = Column(BOOLEAN, default=False)  # Whether the teacher has taken the attendance
     attendance_teacher_id = Column(INTEGER, ForeignKey("users.id"))  # The teacher who took the attendance call
     attendance_time = Column(DATETIME)  # UTC time of the attendance call
@@ -222,7 +222,7 @@ class Teaching(db.Model):
     session_id = Column(INTEGER, ForeignKey("classSessions.id"), primary_key=True)
     teacher_id = Column(INTEGER, ForeignKey("users.id"), primary_key=True)
     deleted = Column(BOOLEAN, default=False)
-    comments = Column(String)
+    comments = Column(String(500))
     attended = Column(BOOLEAN, default=False)  # Whether the teacher attended the session
 
     # Relationships
@@ -237,7 +237,7 @@ class TakingClass(db.Model):
     student_id = Column(INTEGER, ForeignKey("students.id"), primary_key=True)
     attended = Column(BOOLEAN, default=False)  # Whether the student attended the session
     deleted = Column(BOOLEAN, default=False)
-    comments = Column(String)
+    comments = Column(String(500))
 
     # Relationships
     class_session = db.relationship("ClassSession", backref="session_takings")
@@ -251,7 +251,7 @@ class TokenBlacklist(db.Model):
     id = Column(INTEGER, primary_key=True)
     jti = Column(String(36), nullable=False)
     token_type = Column(String(10), nullable=False)
-    user_id = Column(String(50), nullable=False)
+    user_id = Column(INTEGER, nullable=False)
     revoked = Column(BOOLEAN, nullable=False)
     expires = Column(DATETIME, nullable=False)
 
@@ -276,11 +276,11 @@ class ModificationLog(db.Model):
     id = Column(INTEGER, primary_key=True)
     operator = Column(INTEGER, ForeignKey("users.id"))
     modification_time = Column(DATETIME)
-    table = Column(String)
+    table = Column(String(50))
     entry = Column(INTEGER)
-    column = Column(String)
-    original = Column(String)
-    new = Column(String)
+    column = Column(String(50))
+    original = Column(String(50))
+    new = Column(String(50))
 
     # def __repr__(self):
     #     if self.operator_wechat:

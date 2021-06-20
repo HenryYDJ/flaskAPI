@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 1ed6b529d800
+Revision ID: 1d666d8e7781
 Revises: 
-Create Date: 2021-05-31 22:39:38.876684
+Create Date: 2021-06-20 16:16:28.866517
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1ed6b529d800'
+revision = '1d666d8e7781'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,14 +21,14 @@ def upgrade():
     op.create_table('courses',
     sa.Column('id', sa.INTEGER(), nullable=False),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
-    sa.Column('name', sa.String(), nullable=True),
+    sa.Column('name', sa.String(length=100), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('token_blacklist',
     sa.Column('id', sa.INTEGER(), nullable=False),
     sa.Column('jti', sa.String(length=36), nullable=False),
     sa.Column('token_type', sa.String(length=10), nullable=False),
-    sa.Column('user_id', sa.String(length=50), nullable=False),
+    sa.Column('user_id', sa.INTEGER(), nullable=False),
     sa.Column('revoked', sa.BOOLEAN(), nullable=False),
     sa.Column('expires', sa.DATETIME(), nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -36,21 +36,21 @@ def upgrade():
     op.create_table('users',
     sa.Column('id', sa.INTEGER(), nullable=False),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
-    sa.Column('nick_name', sa.String(), nullable=True),
-    sa.Column('real_name', sa.String(), nullable=True),
-    sa.Column('phone', sa.String(), nullable=True),
-    sa.Column('email', sa.String(), nullable=True),
-    sa.Column('pwhash', sa.String(), nullable=True),
+    sa.Column('nick_name', sa.String(length=20), nullable=True),
+    sa.Column('real_name', sa.String(length=20), nullable=True),
+    sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('email', sa.String(length=50), nullable=True),
+    sa.Column('pwhash', sa.String(length=200), nullable=True),
     sa.Column('register_time', sa.DATETIME(), nullable=True),
     sa.Column('roles', sa.INTEGER(), nullable=True),
-    sa.Column('avatar', sa.String(), nullable=True),
-    sa.Column('openid', sa.String(), nullable=True),
-    sa.Column('session_key', sa.String(), nullable=True),
+    sa.Column('avatar', sa.String(length=200), nullable=True),
+    sa.Column('openid', sa.String(length=100), nullable=True),
+    sa.Column('session_key', sa.String(length=200), nullable=True),
     sa.Column('gender', sa.BOOLEAN(), nullable=True),
-    sa.Column('language', sa.String(), nullable=True),
-    sa.Column('city', sa.String(), nullable=True),
-    sa.Column('province', sa.String(), nullable=True),
-    sa.Column('country', sa.String(), nullable=True),
+    sa.Column('language', sa.String(length=20), nullable=True),
+    sa.Column('city', sa.String(length=20), nullable=True),
+    sa.Column('province', sa.String(length=20), nullable=True),
+    sa.Column('country', sa.String(length=100), nullable=True),
     sa.Column('validated', sa.INTEGER(), nullable=True),
     sa.Column('approve_time', sa.DATETIME(), nullable=True),
     sa.Column('approver_id', sa.INTEGER(), nullable=True),
@@ -59,12 +59,12 @@ def upgrade():
     )
     op.create_table('classSessions',
     sa.Column('id', sa.INTEGER(), nullable=False),
-    sa.Column('series_id', sa.String(), nullable=True),
+    sa.Column('series_id', sa.String(length=200), nullable=True),
     sa.Column('course_id', sa.INTEGER(), nullable=True),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
     sa.Column('start_time', sa.DATETIME(), nullable=True),
     sa.Column('duration', sa.INTEGER(), nullable=True),
-    sa.Column('info', sa.String(), nullable=True),
+    sa.Column('info', sa.String(length=500), nullable=True),
     sa.Column('attendance_call', sa.BOOLEAN(), nullable=True),
     sa.Column('attendance_teacher_id', sa.INTEGER(), nullable=True),
     sa.Column('attendance_time', sa.DATETIME(), nullable=True),
@@ -76,18 +76,18 @@ def upgrade():
     sa.Column('id', sa.INTEGER(), nullable=False),
     sa.Column('operator', sa.INTEGER(), nullable=True),
     sa.Column('modification_time', sa.DATETIME(), nullable=True),
-    sa.Column('table', sa.String(), nullable=True),
+    sa.Column('table', sa.String(length=50), nullable=True),
     sa.Column('entry', sa.INTEGER(), nullable=True),
-    sa.Column('column', sa.String(), nullable=True),
-    sa.Column('original', sa.String(), nullable=True),
-    sa.Column('new', sa.String(), nullable=True),
+    sa.Column('column', sa.String(length=50), nullable=True),
+    sa.Column('original', sa.String(length=50), nullable=True),
+    sa.Column('new', sa.String(length=50), nullable=True),
     sa.ForeignKeyConstraint(['operator'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('students',
     sa.Column('id', sa.INTEGER(), nullable=False),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
-    sa.Column('real_name', sa.String(), nullable=True),
+    sa.Column('real_name', sa.String(length=20), nullable=True),
     sa.Column('dob', sa.DATETIME(), nullable=True),
     sa.Column('gender', sa.BOOLEAN(), nullable=True),
     sa.Column('creator_id', sa.INTEGER(), nullable=True),
@@ -119,7 +119,7 @@ def upgrade():
     sa.Column('student_id', sa.INTEGER(), nullable=False),
     sa.Column('attended', sa.BOOLEAN(), nullable=True),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
-    sa.Column('comments', sa.String(), nullable=True),
+    sa.Column('comments', sa.String(length=500), nullable=True),
     sa.ForeignKeyConstraint(['session_id'], ['classSessions.id'], ),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
     sa.PrimaryKeyConstraint('session_id', 'student_id')
@@ -128,7 +128,7 @@ def upgrade():
     sa.Column('session_id', sa.INTEGER(), nullable=False),
     sa.Column('teacher_id', sa.INTEGER(), nullable=False),
     sa.Column('deleted', sa.BOOLEAN(), nullable=True),
-    sa.Column('comments', sa.String(), nullable=True),
+    sa.Column('comments', sa.String(length=500), nullable=True),
     sa.Column('attended', sa.BOOLEAN(), nullable=True),
     sa.ForeignKeyConstraint(['session_id'], ['classSessions.id'], ),
     sa.ForeignKeyConstraint(['teacher_id'], ['users.id'], ),

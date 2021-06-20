@@ -17,7 +17,8 @@ def add_user():
     """
     This api is used from the web end point to initially register an user to the DB.
     """
-    phone = request.json['phone']
+    phone = request.json.get('phone', None)
+    real_name = request.json.get('real_name', None)
 
     already_existed = query_existing_phone_user(phone)
     if already_existed:
@@ -25,7 +26,9 @@ def add_user():
     else:
         user = User()
         user.phone = phone
+        user.real_name = real_name
         user.set_pwhash(request.json.get('password', None))
+        user.register_time = datetime.utcnow()
 
         db.session.add(user)
         db.session.commit()
