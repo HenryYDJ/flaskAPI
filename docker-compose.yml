@@ -1,0 +1,59 @@
+version: "3.7"
+services:
+  db:
+    image: mysql:8.0
+    command: '--default-authentication-plugin=mysql_native_password'
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    secrets:
+      - db-password
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - backnet
+    environment:
+      - MYSQL_DATABASE=linkesi
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_USER=lynxadmin
+      - MYSQL_PASSWORD_FILE=/run/secrets/db-password
+    expose:
+      - 3306
+      - 33060
+
+  backend:
+    build: backEnd
+    restart: always
+    expose:
+      - 5000
+    networks:
+      - backnet
+      - frontnet
+    depends_on:
+      - db
+
+  proxy:
+    build: nginx
+    restart: always
+    ports: 
+      - 7777:7777
+    volumes:
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - backend
+    networks:
+      - frontnet
+
+secrets:
+  db-password:
+    file: mysql/password.txt
+
+volumes:
+  db-data:
+
+networks:
+  backnet:
+  frontnet:
