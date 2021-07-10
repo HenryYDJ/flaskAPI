@@ -143,3 +143,6 @@ dmypy.json
 # SSL Certificate
 novaqbit.com.pem
 novaqbit.com.key
+
+# password files
+password.txt
